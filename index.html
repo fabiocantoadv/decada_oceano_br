@@ -55,7 +55,7 @@
                 <div class="kpi-details">
                     <h3>Total de Publicações</h3>
                     <p id="kpi-total-publications" class="kpi-value">-</p>
-                    <span class="kpi-context">artigos e capítulos</span>
+                    <span id="kpi-pub-context" class="kpi-context">todos os tipos</span>
                 </div>
             </div>
 
@@ -416,7 +416,40 @@
                 <div id="chart-oa-status-bar" class="chart-container large-chart"></div>
             </div>
 
-            <!-- Row 8: Artigos mais citados por autoras (Full-width) -->
+            <!-- Row 8: Análise de Citações por Gênero (Full-width) -->
+            <div class="chart-card span-all" id="card-gender-citations">
+                <div class="chart-header">
+                    <div class="chart-title-area">
+                        <h2>Análise de Citações por Gênero</h2>
+                        <span class="chart-subtitle">Comparação de impacto científico entre autoras e autores do primeiro artigo</span>
+                    </div>
+                </div>
+                <div id="gender-citations-panel" class="gender-citations-panel"></div>
+            </div>
+
+            <!-- Nota metodológica: defasagem de indexação pós-2021 -->
+            <div class="chart-card span-all indexing-note-card" id="card-indexing-note">
+                <div class="indexing-note-inner">
+                    <div class="indexing-note-icon">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <circle cx="12" cy="12" r="10"/>
+                            <line x1="12" y1="8" x2="12" y2="12"/>
+                            <line x1="12" y1="16" x2="12.01" y2="16"/>
+                        </svg>
+                    </div>
+                    <div class="indexing-note-content">
+                        <h3>Nota Metodológica — Defasagem de Indexação Pós-2021</h3>
+                        <p>A aparente queda na produção científica sobre ODS 14 a partir de 2022 <strong>não necessariamente reflete uma redução real</strong> na atividade de pesquisa. O OpenAlex e outras bases bibliométricas indexam artigos com uma defasagem típica de <strong>12 a 24 meses</strong> para periódicos de acesso fechado. Adicionalmente, projetos interrompidos durante a pandemia de COVID-19 (2020–2021) geraram publicações concentradas em 2021–2022, criando um pico artificial seguido de queda estatística. <strong>Os dados de 2019–2021 são os mais robustos e confiáveis</strong> para análise de tendências.</p>
+                        <div class="indexing-note-tags">
+                            <span class="note-tag amber">⚠ Dados 2022–2025: indexação incompleta</span>
+                            <span class="note-tag green">✓ Dados 2000–2021: alta confiabilidade</span>
+                            <span class="note-tag blue">ℹ Fonte: OpenAlex — atualização contínua</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Row 9: Artigos mais citados por autoras (Full-width) -->
             <div class="chart-card span-all">
                 <div class="chart-header">
                     <div class="chart-title-area">

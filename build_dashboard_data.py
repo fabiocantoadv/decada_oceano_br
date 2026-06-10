@@ -2,8 +2,198 @@ import pandas as pd
 import json
 import os
 from collections import defaultdict, Counter
+import unicodedata
 
-excel_path = r"c:\Users\Wadson\Desktop\openalex_export_completo.xlsx"
+# ─────────────────────────────────────────────────────────────────────────────
+# Dicionário de nomes brasileiros / internacionais comuns para resgate de
+# registros classificados como INDEFINIDO pelo serviço externo de gênero.
+# Fonte: IBGE (nomes mais frequentes), complementado manualmente.
+# ─────────────────────────────────────────────────────────────────────────────
+NAME_GENDER_DICT = {
+    # ── Masculinos ──────────────────────────────────────────────────────────
+    'abel': 'MASCULINO', 'abilio': 'MASCULINO', 'adalberto': 'MASCULINO',
+    'adelmo': 'MASCULINO', 'adilson': 'MASCULINO', 'adilton': 'MASCULINO',
+    'adolfo': 'MASCULINO', 'adriano': 'MASCULINO', 'agostinho': 'MASCULINO',
+    'ailton': 'MASCULINO', 'alan': 'MASCULINO', 'alberto': 'MASCULINO',
+    'alceu': 'MASCULINO', 'aldo': 'MASCULINO', 'alejandro': 'MASCULINO',
+    'alex': 'MASCULINO', 'alexandre': 'MASCULINO', 'alexis': 'MASCULINO',
+    'alfredo': 'MASCULINO', 'almir': 'MASCULINO', 'alvaro': 'MASCULINO',
+    'amadeu': 'MASCULINO', 'americo': 'MASCULINO', 'amilton': 'MASCULINO',
+    'anderson': 'MASCULINO', 'andre': 'MASCULINO', 'andrei': 'MASCULINO',
+    'andreo': 'MASCULINO', 'angelo': 'MASCULINO', 'anselmo': 'MASCULINO',
+    'antonio': 'MASCULINO', 'ariel': 'MASCULINO', 'armando': 'MASCULINO',
+    'arnaldo': 'MASCULINO', 'artur': 'MASCULINO', 'arthur': 'MASCULINO',
+    'augusto': 'MASCULINO', 'aurelio': 'MASCULINO', 'benedito': 'MASCULINO',
+    'bernardo': 'MASCULINO', 'breno': 'MASCULINO', 'bruno': 'MASCULINO',
+    'caio': 'MASCULINO', 'caique': 'MASCULINO', 'calos': 'MASCULINO',
+    'carlos': 'MASCULINO', 'cassio': 'MASCULINO', 'celso': 'MASCULINO',
+    'cesar': 'MASCULINO', 'charles': 'MASCULINO', 'christian': 'MASCULINO',
+    'christiano': 'MASCULINO', 'cicero': 'MASCULINO', 'claudio': 'MASCULINO',
+    'cleber': 'MASCULINO', 'clecio': 'MASCULINO', 'cleiton': 'MASCULINO',
+    'cleto': 'MASCULINO', 'clovis': 'MASCULINO', 'cristian': 'MASCULINO',
+    'cristiano': 'MASCULINO', 'cristovao': 'MASCULINO', 'dario': 'MASCULINO',
+    'david': 'MASCULINO', 'deivid': 'MASCULINO', 'denis': 'MASCULINO',
+    'denilson': 'MASCULINO', 'denis': 'MASCULINO', 'derick': 'MASCULINO',
+    'diego': 'MASCULINO', 'diogo': 'MASCULINO', 'dirceu': 'MASCULINO',
+    'djalma': 'MASCULINO', 'douglas': 'MASCULINO', 'duarte': 'MASCULINO',
+    'durval': 'MASCULINO', 'edgar': 'MASCULINO', 'edmar': 'MASCULINO',
+    'edmilson': 'MASCULINO', 'edmond': 'MASCULINO', 'edson': 'MASCULINO',
+    'eduardo': 'MASCULINO', 'elias': 'MASCULINO', 'elio': 'MASCULINO',
+    'elizeu': 'MASCULINO', 'elvis': 'MASCULINO', 'emerson': 'MASCULINO',
+    'emilio': 'MASCULINO', 'emmanuel': 'MASCULINO', 'eneas': 'MASCULINO',
+    'enzo': 'MASCULINO', 'erico': 'MASCULINO', 'ernani': 'MASCULINO',
+    'ernesto': 'MASCULINO', 'estevao': 'MASCULINO', 'eugenio': 'MASCULINO',
+    'evandro': 'MASCULINO', 'ezequiel': 'MASCULINO', 'fabiano': 'MASCULINO',
+    'fabio': 'MASCULINO', 'fabricio': 'MASCULINO', 'felipe': 'MASCULINO',
+    'felix': 'MASCULINO', 'fernando': 'MASCULINO', 'filipe': 'MASCULINO',
+    'flavio': 'MASCULINO', 'francisco': 'MASCULINO', 'frederico': 'MASCULINO',
+    'gabriel': 'MASCULINO', 'geraldo': 'MASCULINO', 'gil': 'MASCULINO',
+    'gilberto': 'MASCULINO', 'gilmar': 'MASCULINO', 'giovani': 'MASCULINO',
+    'giovanny': 'MASCULINO', 'giulio': 'MASCULINO', 'glauco': 'MASCULINO',
+    'graciliano': 'MASCULINO', 'gregorio': 'MASCULINO', 'guilherme': 'MASCULINO',
+    'gustavo': 'MASCULINO', 'han': 'MASCULINO', 'helio': 'MASCULINO',
+    'henrique': 'MASCULINO', 'herbert': 'MASCULINO', 'heriberto': 'MASCULINO',
+    'hernando': 'MASCULINO', 'hilton': 'MASCULINO', 'homero': 'MASCULINO',
+    'horacio': 'MASCULINO', 'hugo': 'MASCULINO', 'humberto': 'MASCULINO',
+    'igor': 'MASCULINO', 'ilton': 'MASCULINO', 'italo': 'MASCULINO',
+    'ivan': 'MASCULINO', 'ivano': 'MASCULINO', 'ivo': 'MASCULINO',
+    'jacob': 'MASCULINO', 'jadson': 'MASCULINO', 'jaime': 'MASCULINO',
+    'jamil': 'MASCULINO', 'jandir': 'MASCULINO', 'janio': 'MASCULINO',
+    'jardel': 'MASCULINO', 'javier': 'MASCULINO', 'jefferson': 'MASCULINO',
+    'jhonatan': 'MASCULINO', 'joao': 'MASCULINO', 'joaquim': 'MASCULINO',
+    'joe': 'MASCULINO', 'joel': 'MASCULINO', 'jonas': 'MASCULINO',
+    'jonathan': 'MASCULINO', 'jorge': 'MASCULINO', 'jose': 'MASCULINO',
+    'josue': 'MASCULINO', 'juarez': 'MASCULINO', 'julio': 'MASCULINO',
+    'junior': 'MASCULINO', 'kevin': 'MASCULINO', 'kleber': 'MASCULINO',
+    'laercio': 'MASCULINO', 'lazaro': 'MASCULINO', 'leandro': 'MASCULINO',
+    'leon': 'MASCULINO', 'leonardo': 'MASCULINO', 'leones': 'MASCULINO',
+    'leonidas': 'MASCULINO', 'luan': 'MASCULINO', 'luciano': 'MASCULINO',
+    'luigi': 'MASCULINO', 'luis': 'MASCULINO', 'luiz': 'MASCULINO',
+    'lúcio': 'MASCULINO', 'lucio': 'MASCULINO', 'magnus': 'MASCULINO',
+    'manoel': 'MASCULINO', 'manuel': 'MASCULINO', 'marcelo': 'MASCULINO',
+    'marcio': 'MASCULINO', 'marco': 'MASCULINO', 'marcos': 'MASCULINO',
+    'mario': 'MASCULINO', 'mateus': 'MASCULINO', 'matheus': 'MASCULINO',
+    'mauricio': 'MASCULINO', 'mauro': 'MASCULINO', 'maximo': 'MASCULINO',
+    'miguel': 'MASCULINO', 'moisés': 'MASCULINO', 'moises': 'MASCULINO',
+    'murilo': 'MASCULINO', 'natan': 'MASCULINO', 'nathan': 'MASCULINO',
+    'nelson': 'MASCULINO', 'newton': 'MASCULINO', 'nicolás': 'MASCULINO',
+    'nicolas': 'MASCULINO', 'nilton': 'MASCULINO', 'nivaldo': 'MASCULINO',
+    'norberto': 'MASCULINO', 'obed': 'MASCULINO', 'odair': 'MASCULINO',
+    'olavo': 'MASCULINO', 'olimpio': 'MASCULINO', 'omar': 'MASCULINO',
+    'osmar': 'MASCULINO', 'osmario': 'MASCULINO', 'osvaldo': 'MASCULINO',
+    'otavio': 'MASCULINO', 'pablo': 'MASCULINO', 'paulo': 'MASCULINO',
+    'pedro': 'MASCULINO', 'rafael': 'MASCULINO', 'rainaldo': 'MASCULINO',
+    'raul': 'MASCULINO', 'reinaldo': 'MASCULINO', 'renato': 'MASCULINO',
+    'renzo': 'MASCULINO', 'rhuan': 'MASCULINO', 'ricardo': 'MASCULINO',
+    'roberto': 'MASCULINO', 'rodrigo': 'MASCULINO', 'rogerio': 'MASCULINO',
+    'roman': 'MASCULINO', 'romario': 'MASCULINO', 'ronaldo': 'MASCULINO',
+    'ronan': 'MASCULINO', 'rubens': 'MASCULINO', 'ruben': 'MASCULINO',
+    'rui': 'MASCULINO', 'samuel': 'MASCULINO', 'saulo': 'MASCULINO',
+    'sebastiao': 'MASCULINO', 'sérgio': 'MASCULINO', 'sergio': 'MASCULINO',
+    'silvano': 'MASCULINO', 'silvio': 'MASCULINO', 'simao': 'MASCULINO',
+    'stefano': 'MASCULINO', 'tarcisio': 'MASCULINO', 'thiago': 'MASCULINO',
+    'tiago': 'MASCULINO', 'tomas': 'MASCULINO', 'tulio': 'MASCULINO',
+    'ulisses': 'MASCULINO', 'uriel': 'MASCULINO', 'vagner': 'MASCULINO',
+    'valdemar': 'MASCULINO', 'valentim': 'MASCULINO', 'valerio': 'MASCULINO',
+    'vasco': 'MASCULINO', 'vinicius': 'MASCULINO', 'vitor': 'MASCULINO',
+    'vlademir': 'MASCULINO', 'wagner': 'MASCULINO', 'walter': 'MASCULINO',
+    'washington': 'MASCULINO', 'wendel': 'MASCULINO', 'william': 'MASCULINO',
+    'wladimir': 'MASCULINO', 'yder': 'MASCULINO', 'yuri': 'MASCULINO',
+    'yago': 'MASCULINO',
+    # ── Femininos ───────────────────────────────────────────────────────────
+    'abigail': 'FEMININO', 'adalice': 'FEMININO', 'adelia': 'FEMININO',
+    'adriana': 'FEMININO', 'agatha': 'FEMININO', 'agnes': 'FEMININO',
+    'aida': 'FEMININO', 'aldeni': 'FEMININO', 'alessandra': 'FEMININO',
+    'aline': 'FEMININO', 'alice': 'FEMININO', 'alicia': 'FEMININO',
+    'alivio': 'FEMININO', 'amanda': 'FEMININO', 'amelia': 'FEMININO',
+    'ana': 'FEMININO', 'andréa': 'FEMININO', 'andrea': 'FEMININO',
+    'andreia': 'FEMININO', 'anelise': 'FEMININO', 'angela': 'FEMININO',
+    'angelica': 'FEMININO', 'ania': 'FEMININO', 'anizia': 'FEMININO',
+    'anna': 'FEMININO', 'antonia': 'FEMININO', 'aparecida': 'FEMININO',
+    'beatriz': 'FEMININO', 'berenice': 'FEMININO', 'bianca': 'FEMININO',
+    'bruna': 'FEMININO', 'camila': 'FEMININO', 'carla': 'FEMININO',
+    'carlota': 'FEMININO', 'carolina': 'FEMININO', 'caroline': 'FEMININO',
+    'cassia': 'FEMININO', 'catarina': 'FEMININO', 'cecilia': 'FEMININO',
+    'celia': 'FEMININO', 'christiane': 'FEMININO', 'cintia': 'FEMININO',
+    'cláudia': 'FEMININO', 'claudia': 'FEMININO', 'cleide': 'FEMININO',
+    'conceicao': 'FEMININO', 'cristiane': 'FEMININO', 'cristina': 'FEMININO',
+    'daiana': 'FEMININO', 'daiane': 'FEMININO', 'daniela': 'FEMININO',
+    'danielle': 'FEMININO', 'danyelle': 'FEMININO', 'debora': 'FEMININO',
+    'denise': 'FEMININO', 'diana': 'FEMININO', 'dulce': 'FEMININO',
+    'edna': 'FEMININO', 'elaine': 'FEMININO', 'elena': 'FEMININO',
+    'eliana': 'FEMININO', 'eliane': 'FEMININO', 'elisa': 'FEMININO',
+    'elisabete': 'FEMININO', 'elisangela': 'FEMININO', 'elizabete': 'FEMININO',
+    'elizangela': 'FEMININO', 'emilia': 'FEMININO', 'erica': 'FEMININO',
+    'erika': 'FEMININO', 'ester': 'FEMININO', 'estela': 'FEMININO',
+    'eugenia': 'FEMININO', 'fabiana': 'FEMININO', 'fatima': 'FEMININO',
+    'fernanda': 'FEMININO', 'flavia': 'FEMININO', 'francisca': 'FEMININO',
+    'gabriela': 'FEMININO', 'gisele': 'FEMININO', 'giseli': 'FEMININO',
+    'gloria': 'FEMININO', 'graciele': 'FEMININO', 'graziela': 'FEMININO',
+    'helena': 'FEMININO', 'hellen': 'FEMININO', 'ines': 'FEMININO',
+    'ingrid': 'FEMININO', 'irene': 'FEMININO', 'iris': 'FEMININO',
+    'isabel': 'FEMININO', 'isabella': 'FEMININO', 'ivanete': 'FEMININO',
+    'ivone': 'FEMININO', 'jacqueline': 'FEMININO', 'janaina': 'FEMININO',
+    'jane': 'FEMININO', 'jaqueline': 'FEMININO', 'jessica': 'FEMININO',
+    'joana': 'FEMININO', 'josiane': 'FEMININO', 'jovita': 'FEMININO',
+    'julia': 'FEMININO', 'juliana': 'FEMININO', 'julieta': 'FEMININO',
+    'karen': 'FEMININO', 'katia': 'FEMININO', 'katya': 'FEMININO',
+    'kelly': 'FEMININO', 'lais': 'FEMININO', 'larissa': 'FEMININO',
+    'laura': 'FEMININO', 'leila': 'FEMININO', 'lena': 'FEMININO',
+    'leticia': 'FEMININO', 'lidia': 'FEMININO', 'lilian': 'FEMININO',
+    'liliane': 'FEMININO', 'liz': 'FEMININO', 'lorena': 'FEMININO',
+    'lucia': 'FEMININO', 'luciana': 'FEMININO', 'luzia': 'FEMININO',
+    'luiz': 'MASCULINO',
+    'madalena': 'FEMININO', 'maira': 'FEMININO', 'manuela': 'FEMININO',
+    'marcela': 'FEMININO', 'marcia': 'FEMININO', 'margarete': 'FEMININO',
+    'margarida': 'FEMININO', 'maria': 'FEMININO', 'mariana': 'FEMININO',
+    'mariangela': 'FEMININO', 'marilia': 'FEMININO', 'marina': 'FEMININO',
+    'marta': 'FEMININO', 'mary': 'FEMININO', 'mayara': 'FEMININO',
+    'mayla': 'FEMININO', 'melina': 'FEMININO', 'melissa': 'FEMININO',
+    'mirian': 'FEMININO', 'miriam': 'FEMININO', 'monica': 'FEMININO',
+    'monique': 'FEMININO', 'nadia': 'FEMININO', 'nadja': 'FEMININO',
+    'natalia': 'FEMININO', 'nathalia': 'FEMININO', 'nathalie': 'FEMININO',
+    'nayra': 'FEMININO', 'nicole': 'FEMININO', 'nubia': 'FEMININO',
+    'odete': 'FEMININO', 'oleide': 'FEMININO', 'patricia': 'FEMININO',
+    'paula': 'FEMININO', 'polliana': 'FEMININO', 'priscila': 'FEMININO',
+    'raquel': 'FEMININO', 'rebeca': 'FEMININO', 'regina': 'FEMININO',
+    'renata': 'FEMININO', 'rita': 'FEMININO', 'roberta': 'FEMININO',
+    'rosa': 'FEMININO', 'rosana': 'FEMININO', 'rosangela': 'FEMININO',
+    'rosaria': 'FEMININO', 'roseli': 'FEMININO', 'rosemeire': 'FEMININO',
+    'rossana': 'FEMININO', 'ruth': 'FEMININO', 'sabrina': 'FEMININO',
+    'samantha': 'FEMININO', 'sara': 'FEMININO', 'selma': 'FEMININO',
+    'silvia': 'FEMININO', 'simone': 'FEMININO', 'sonia': 'FEMININO',
+    'sophia': 'FEMININO', 'stephanie': 'FEMININO', 'susan': 'FEMININO',
+    'susana': 'FEMININO', 'suzel': 'FEMININO', 'taina': 'FEMININO',
+    'talita': 'FEMININO', 'tamires': 'FEMININO', 'tatiana': 'FEMININO',
+    'tatiane': 'FEMININO', 'tereza': 'FEMININO', 'thais': 'FEMININO',
+    'thalita': 'FEMININO', 'uiara': 'FEMININO', 'valentina': 'FEMININO',
+    'valeria': 'FEMININO', 'vanessa': 'FEMININO', 'vera': 'FEMININO',
+    'veronica': 'FEMININO', 'virginia': 'FEMININO', 'vitoria': 'FEMININO',
+    'viviane': 'FEMININO', 'wanessa': 'FEMININO', 'yasmin': 'FEMININO',
+    'yara': 'FEMININO', 'zelia': 'FEMININO', 'zenaide': 'FEMININO',
+}
+
+def normalize_name_key(name):
+    """Normaliza um nome para lookup no dicionário: minúsculo, sem acentos."""
+    nfkd = unicodedata.normalize('NFKD', name)
+    ascii_str = ''.join(c for c in nfkd if not unicodedata.combining(c))
+    return ascii_str.lower().strip()
+
+def rescue_gender_from_name(full_name, current_gender):
+    """
+    Se o gênero atual for INDEFINIDO, tenta recuperá-lo pelo primeiro nome
+    usando o dicionário NAME_GENDER_DICT.
+    """
+    if current_gender != 'INDEFINIDO':
+        return current_gender
+    if not full_name or not isinstance(full_name, str):
+        return 'INDEFINIDO'
+    # Pega apenas o primeiro nome (antes do primeiro espaço ou vírgula)
+    first_name = full_name.strip().split()[0].split(',')[0]
+    key = normalize_name_key(first_name)
+    return NAME_GENDER_DICT.get(key, 'INDEFINIDO')
+
+excel_path = r"c:\Users\Wadson\Documents\Ocean Vega\openalex_export_completo.xlsx"
 merged_json_path = r"c:\Users\Wadson\Desktop\Novo Projeto Ocean Vega\openalex_merged.json"
 
 def format_authors(authorships):
@@ -266,8 +456,9 @@ for idx, row in df.iterrows():
                 if doi_part in k:
                     oa_status = stat
                     break
-        if not oa_status or oa_status == "closed":
-            oa_status = "diamond"
+        if not oa_status:
+            oa_status = "unknown"
+        # NOTA: Não remapear "closed" para "diamond". É incorreto mascarar artigos fechados.
             
         # Find mapped Title
         title = title_map.get(loc_clean)
@@ -372,16 +563,24 @@ for idx, row in df.iterrows():
     # Document Type
     doc_type = row['type']
     if pd.isna(doc_type) or not isinstance(doc_type, str):
-        doc_type = "article"
+        doc_type = "unknown"  # Não assumir "article" para registros sem tipo
     else:
         doc_type = doc_type.strip().lower()
         
-    # Gender
+    # Gender — tenta resgatar INDEFINIDO via dicionário de nomes
     gender = row['genero_previsto']
     if pd.isna(gender) or not isinstance(gender, str):
         gender = "INDEFINIDO"
     else:
         gender = gender.strip().upper()
+    # Post-processamento: resgata pelo primeiro nome do autor principal
+    if gender == "INDEFINIDO":
+        authors_raw = row.get('autores', '')
+        if not isinstance(authors_raw, str):
+            authors_raw = ''
+        # O campo 'autores' pode conter múltiplos autores separados por ';'
+        first_author_name = authors_raw.split(';')[0].strip() if authors_raw else ''
+        gender = rescue_gender_from_name(first_author_name, gender)
         
     # Area
     area = row['area_principal_idx']
@@ -414,8 +613,14 @@ for idx, row in df.iterrows():
     fields_str = row['mapped_fields']
     
     # Open Access properties
-    is_oa = bool(row['is_oa'])
+    # NOTA: A coluna is_oa do Excel tem valores conflitantes para o mesmo artigo
+    # (aparece duplicado com True e False). Usamos o oa_status do JSON do OpenAlex
+    # como fonte autoritativa para derivar is_oa corretamente.
     oa_status = row['mapped_oa_status']
+    # Derivar is_oa a partir do oa_status (fonte confiável dos JSONs)
+    OA_OPEN_STATUSES = {'diamond', 'gold', 'green', 'bronze', 'hybrid'}
+    is_oa = oa_status.lower() in OA_OPEN_STATUSES if isinstance(oa_status, str) else False
+
     
     # Citations
     citations = int(row['mapped_citations'])

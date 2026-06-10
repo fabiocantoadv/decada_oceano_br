@@ -1,4 +1,4 @@
-// Human-readable translations for languages and document types
+﻿// Human-readable translations for languages and document types
 const LANGUAGE_MAP = {
     'en': 'Inglês (en)',
     'pt': 'Português (pt)',
@@ -548,6 +548,7 @@ function updateDashboard() {
     renderOAStatusBarChart();
     renderPublicationsListTable();
     renderAutorasTable();
+    renderGenderCitationsPanel();
 }
 
 // Compute and update KPIs values in the HTML
@@ -571,6 +572,16 @@ function updateKPIs() {
     kpiCitations.textContent = totalCitations.toLocaleString('pt-BR');
     kpiAvgCitations.textContent = avgCitations.toLocaleString('pt-BR');
     kpiSources.textContent = uniqueSources.size.toLocaleString('pt-BR');
+
+    // Dynamic KPI context label for publications
+    const kpiPubContext = document.getElementById('kpi-pub-context');
+    if (kpiPubContext) {
+        if (activeFilters.type !== 'all') {
+            kpiPubContext.textContent = TYPE_MAP[activeFilters.type] || activeFilters.type;
+        } else {
+            kpiPubContext.textContent = 'todos os tipos';
+        }
+    }
 }
 
 // RENDER ACTIVE FILTERS BAR (Kibana-like tags)
@@ -2100,3 +2111,201 @@ function renderAutorasTable() {
 
 // Start app on page load
 window.addEventListener('DOMContentLoaded', init);
+
+// ─────────────────────────────────────────────────────────────────────────────
+// ANÁLISE DE CITAÇÕES POR GÊNERO — com teste t de Welch
+// ─────────────────────────────────────────────────────────────────────────────
+
+function calcStats(values) {
+    const n = values.length;
+    if (n === 0) return { mean: 0, variance: 0, n: 0 };
+    const mean = values.reduce((s, v) => s + v, 0) / n;
+    const variance = n > 1
+        ? values.reduce((s, v) => s + (v - mean) ** 2, 0) / (n - 1)
+        : 0;
+    return { mean, variance, n };
+}
+
+function welchTTest(stats1, stats2) {
+    const { mean: m1, variance: v1, n: n1 } = stats1;
+    const { mean: m2, variance: v2, n: n2 } = stats2;
+    if (n1 < 2 || n2 < 2) return { t: 0, p: 1, df: 0 };
+    const se = Math.sqrt(v1 / n1 + v2 / n2);
+    if (se === 0) return { t: 0, p: 1, df: 0 };
+    const t = Math.abs(m1 - m2) / se;
+    const df = ((v1 / n1 + v2 / n2) ** 2) /
+               ((v1 / n1) ** 2 / (n1 - 1) + (v2 / n2) ** 2 / (n2 - 1));
+    function normalCDF(x) {
+        const t2 = 1 / (1 + 0.2316419 * Math.abs(x));
+        const poly = t2 * (0.319381530 + t2 * (-0.356563782 + t2 * (1.781477937 + t2 * (-1.821255978 + t2 * 1.330274429))));
+        const phi = Math.exp(-0.5 * x * x) / Math.sqrt(2 * Math.PI);
+        const result = phi * poly;
+        return x >= 0 ? 1 - result : result;
+    }
+    const p = 2 * normalCDF(-t);
+    return { t, p, df: Math.round(df) };
+}
+
+function renderGenderCitationsPanel() {
+    const panel = document.getElementById('gender-citations-panel');
+    if (!panel) return;
+
+    const groups = { MASCULINO: [], FEMININO: [], INDEFINIDO: [] };
+    filteredData.forEach(item => {
+        const g = item.gender || 'INDEFINIDO';
+        if (groups[g]) groups[g].push(item.citations);
+        else groups['INDEFINIDO'].push(item.citations);
+    });
+
+    const statsMasc = calcStats(groups.MASCULINO);
+    const statsFem  = calcStats(groups.FEMININO);
+    const statsInd  = calcStats(groups.INDEFINIDO);
+
+    if (statsMasc.n === 0 && statsFem.n === 0) {
+        panel.innerHTML = '<div style="padding:24px;color:var(--text-muted);text-align:center">Sem dados de gênero no filtro atual</div>';
+        return;
+    }
+
+    const test = welchTTest(statsMasc, statsFem);
+    const p = test.p;
+
+    let sigLabel, sigClass, sigDots, sigColor;
+    if (p < 0.001)     { sigLabel = 'p < 0,001 — Altamente Significativa'; sigClass = 'sig-high';   sigDots = 3; sigColor = '#276749'; }
+    else if (p < 0.01) { sigLabel = 'p < 0,01 — Muito Significativa';      sigClass = 'sig-high';   sigDots = 2; sigColor = '#276749'; }
+    else if (p < 0.05) { sigLabel = 'p < 0,05 — Significativa';            sigClass = 'sig-medium'; sigDots = 1; sigColor = '#7b5c00'; }
+    else if (p < 0.10) { sigLabel = 'p < 0,10 — Marginalmente Sign.';      sigClass = 'sig-low';    sigDots = 0; sigColor = '#c53030'; }
+    else               { sigLabel = 'p > 0,10 — Não Significativa';         sigClass = 'sig-none';   sigDots = 0; sigColor = '#718096'; }
+
+    const dotsHtml = Array.from({length:3}, (_,i) =>
+        `<span class="gcb2-dot-sig" style="background:${i < sigDots ? sigColor : '#e2e8f0'}"></span>`
+    ).join('');
+
+    const pFmt  = p < 0.001 ? '< 0,001' : p.toLocaleString('pt-BR', { maximumFractionDigits: 4 });
+    const tFmt  = test.t.toLocaleString('pt-BR', { maximumFractionDigits: 2 });
+    const dfFmt = test.df.toLocaleString('pt-BR');
+
+    const diff    = statsMasc.mean - statsFem.mean;
+    const diffAbs = Math.abs(diff).toFixed(1);
+    const diffPct = statsFem.mean > 0 ? Math.abs(diff / statsFem.mean * 100).toFixed(1) : '—';
+    const diffDir = diff > 0 ? 'acima' : 'abaixo';
+
+    const se = statsMasc.n > 1 && statsFem.n > 1
+        ? Math.sqrt(statsMasc.variance / statsMasc.n + statsFem.variance / statsFem.n)
+        : 0;
+    const ic95lo = (diff - 1.96 * se).toFixed(1);
+    const ic95hi = (diff + 1.96 * se).toFixed(1);
+    const icFmt  = se > 0 ? `[${ic95lo}; ${ic95hi}]` : '—';
+
+    const maxMean  = Math.max(statsMasc.mean, statsFem.mean, statsInd.mean, 1);
+    const BR_REF   = 10;
+
+    function barRow(label, stats, color, note) {
+        if (stats.n === 0) return '';
+        const barW  = Math.min((stats.mean / (maxMean * 1.15)) * 100, 100);
+        const brW   = Math.min((BR_REF / (maxMean * 1.15)) * 100, 100);
+        const mFmt  = stats.mean.toLocaleString('pt-BR', {minimumFractionDigits:1, maximumFractionDigits:1});
+        const sdFmt = Math.sqrt(stats.variance).toLocaleString('pt-BR', {minimumFractionDigits:1, maximumFractionDigits:1});
+        return `
+        <div class="gcb2-row">
+            <div class="gcb2-row-header">
+                <span class="gcb2-color-pill" style="background:${color}"></span>
+                <span class="gcb2-row-label">${label}</span>
+                <span class="gcb2-row-n">${stats.n.toLocaleString('pt-BR')} publicações</span>
+                ${note ? `<span class="gcb2-row-note">${note}</span>` : ''}
+            </div>
+            <div class="gcb2-track-wrap">
+                <div class="gcb2-track">
+                    <div class="gcb2-fill" style="width:${barW}%;background:${color}"></div>
+                    <div class="gcb2-br-marker" style="left:${brW}%" title="Referência Brasil ~${BR_REF} cit./publ."></div>
+                </div>
+                <div class="gcb2-track-stats">
+                    <span class="gcb2-mean-val">${mFmt}</span>
+                    <span class="gcb2-mean-unit">cit./publ.</span>
+                    <span class="gcb2-sd">dp ± ${sdFmt}</span>
+                </div>
+            </div>
+        </div>`;
+    }
+
+    const interpretText = p < 0.05
+        ? `A diferença de <strong>${diffAbs} citações/publicação</strong> (${diffPct}% ${diffDir} para autores masculinos) é <strong>estatisticamente significativa</strong> (p ${pFmt}). Com mais de ${Math.min(statsMasc.n, statsFem.n).toLocaleString('pt-BR')} publicações em cada grupo, o resultado dificilmente se deve ao acaso. Isso pode indicar vieses de citação por gênero, diferenças nos temas pesquisados, ou acesso desigual a redes de colaboração internacional.`
+        : `A diferença de <strong>${diffAbs} citações/publicação</strong> entre os grupos <strong>não é estatisticamente significativa</strong> (p = ${pFmt}). Não há evidência robusta de disparidade de impacto por gênero com os dados atuais. Isso não descarta a existência de diferença — pode haver limitações de poder estatístico ou heterogeneidade temática.`;
+
+    panel.innerHTML = `
+    <div class="gcb2-root">
+        <div class="gcb2-banner">
+            <div class="gcb2-banner-item">
+                <div class="gcb2-banner-val" style="color:#6092C0">${statsMasc.mean.toLocaleString('pt-BR',{minimumFractionDigits:1,maximumFractionDigits:1})}</div>
+                <div class="gcb2-banner-key">cit./publ. — <strong>Masculino</strong></div>
+                <div class="gcb2-banner-sub">${statsMasc.n.toLocaleString('pt-BR')} publicações</div>
+            </div>
+            <div class="gcb2-banner-vs">
+                <div class="gcb2-banner-diff ${diff > 0 ? 'diff-pos' : 'diff-neg'}">${diff > 0 ? '+' : ''}${diffAbs}</div>
+                <div class="gcb2-banner-diff-label">cit./publ. (masc. ${diffDir} das fem.)</div>
+                <div class="gcb2-banner-pct">${diffPct}% de diferença relativa</div>
+            </div>
+            <div class="gcb2-banner-item">
+                <div class="gcb2-banner-val" style="color:#D36086">${statsFem.mean.toLocaleString('pt-BR',{minimumFractionDigits:1,maximumFractionDigits:1})}</div>
+                <div class="gcb2-banner-key">cit./publ. — <strong>Feminino</strong></div>
+                <div class="gcb2-banner-sub">${statsFem.n.toLocaleString('pt-BR')} publicações</div>
+            </div>
+        </div>
+
+        <div class="gcb2-body">
+            <div class="gcb2-bars-col">
+                <div class="gcb2-col-title">Média de Citações por Publicação
+                    <span class="gcb2-col-sub">por gênero do(a) primeiro(a) autor(a) · dp = desvio padrão</span>
+                </div>
+                ${barRow('Masculino', statsMasc, '#6092C0')}
+                ${barRow('Feminino', statsFem, '#D36086')}
+                ${statsInd.n > 0 ? barRow('Gênero não identificado', statsInd, '#a0aec0', '⚠ inclui nomes ambíguos/estrangeiros') : ''}
+                <div class="gcb2-legend">
+                    <span class="gcb2-legend-marker"></span>
+                    <span class="gcb2-legend-text">Marcador vertical = referência Brasil ~${BR_REF} cit./publ. em Ciências Marinhas (OpenAlex)</span>
+                </div>
+            </div>
+
+            <div class="gcb2-stats-col">
+                <div class="gcb2-col-title">Teste de Significância Estatística
+                    <span class="gcb2-col-sub">Teste t de Welch para amostras independentes</span>
+                </div>
+
+                <div class="gcb2-sig-block ${sigClass}">
+                    <div class="gcb2-sig-dots">${dotsHtml}</div>
+                    <div class="gcb2-sig-label">${sigLabel}</div>
+                </div>
+
+                <div class="gcb2-metrics">
+                    <div class="gcb2-metric">
+                        <div class="gcb2-metric-val">${tFmt}</div>
+                        <div class="gcb2-metric-name">Estatística <em>t</em> de Welch</div>
+                        <div class="gcb2-metric-desc">Razão entre a diferença das médias e o erro padrão combinado. Quanto mais afastado de zero, mais expressiva é a diferença em relação à variabilidade interna dos grupos.</div>
+                    </div>
+                    <div class="gcb2-metric">
+                        <div class="gcb2-metric-val">${pFmt}</div>
+                        <div class="gcb2-metric-name">Valor-<em>p</em> (bicaudal)</div>
+                        <div class="gcb2-metric-desc">Probabilidade de observar uma diferença tão grande por puro acaso. Convenção científica: p &lt; 0,05 indica resultado estatisticamente significativo.</div>
+                    </div>
+                    <div class="gcb2-metric">
+                        <div class="gcb2-metric-val">${dfFmt}</div>
+                        <div class="gcb2-metric-name">Graus de liberdade</div>
+                        <div class="gcb2-metric-desc">Calculados pela fórmula de Welch-Satterthwaite, que não exige homogeneidade de variâncias — adequado quando os grupos têm dispersões distintas.</div>
+                    </div>
+                    <div class="gcb2-metric">
+                        <div class="gcb2-metric-val gcb2-ic">${icFmt}</div>
+                        <div class="gcb2-metric-name">IC 95% da diferença (masc. − fem.)</div>
+                        <div class="gcb2-metric-desc">Se o intervalo não contém o zero, a diferença é significativa a 5%. Intervalo calculado com z = 1,96 (aproximação normal).</div>
+                    </div>
+                </div>
+
+                <div class="gcb2-interpretation">
+                    <div class="gcb2-interp-title">💡 Interpretação</div>
+                    <p>${interpretText}</p>
+                </div>
+
+                <p class="gcb2-footnote">Método: teste <em>t</em> de Welch (1947) para amostras independentes com variâncias desiguais. Valor-<em>p</em> via aproximação normal padrão (válida para gl &gt; 30). Gênero inferido do primeiro nome do(a) primeiro(a) autor(a) listado(a).</p>
+            </div>
+        </div>
+    </div>`;
+}
+
