@@ -10,18 +10,47 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Montserrat:wght@500;600;700&display=swap" rel="stylesheet">
     
-    <!-- Vega & Vega-Lite Libraries from CDN -->
-    <script src="https://cdn.jsdelivr.net/npm/vega@5"></script>
-    <script src="https://cdn.jsdelivr.net/npm/vega-lite@5"></script>
-    <script src="https://cdn.jsdelivr.net/npm/vega-embed@6"></script>
+    <!-- Vega & Vega-Lite Libraries (Local) -->
+    <script src="lib/vega.min.js"></script>
+    <script src="lib/vega-lite.min.js"></script>
+    <script src="lib/vega-embed.min.js"></script>
     
     <!-- Stylesheet -->
-    <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="styles.css?v=1.0.4">
     
     <!-- Pre-aggregated data loaded from local JS to bypass CORS -->
-    <script src="dashboard_data.js"></script>
+    <script src="dashboard_data.js?v=1.0.4"></script>
 </head>
 <body>
+    <script>
+        function showDebugError(msg) {
+            var div = document.getElementById('debug-error-banner');
+            if (!div) {
+                div = document.createElement('div');
+                div.id = 'debug-error-banner';
+                div.style.position = 'fixed';
+                div.style.top = '0';
+                div.style.left = '0';
+                div.style.width = '100%';
+                div.style.background = '#fee2e2';
+                div.style.color = '#991b1b';
+                div.style.padding = '15px';
+                div.style.borderBottom = '2px solid #f87171';
+                div.style.zIndex = '999999';
+                div.style.fontSize = '14px';
+                div.style.fontFamily = 'monospace';
+                div.style.whiteSpace = 'pre-wrap';
+                document.body.appendChild(div);
+            }
+            div.innerHTML += '<div>' + msg + '</div>';
+        }
+        window.addEventListener('error', function(e) {
+            showDebugError('<strong>JavaScript Error:</strong> ' + e.message + ' em ' + e.filename + ':' + e.lineno);
+        });
+        window.addEventListener('unhandledrejection', function(e) {
+            showDebugError('<strong>Promise Rejection:</strong> ' + (e.reason && e.reason.message || e.reason || 'Erro desconhecido'));
+        });
+    </script>
     <div class="app-container">
         <!-- Header Section -->
         <header class="dashboard-header">
@@ -350,6 +379,42 @@
                 <div id="chart-gender" class="chart-container donut-container"></div>
             </div>
 
+            <!-- Metodologia de identificação de gênero -->
+            <section class="chart-card span-all gender-method-card" id="gender-method" aria-labelledby="gender-method-title">
+                <div class="gender-method-inner">
+                    <div class="gender-method-icon" aria-hidden="true">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M12 22a10 10 0 1 0 0-20 10 10 0 0 0 0 20Z"/>
+                            <path d="M12 16v-4"/>
+                            <path d="M12 8h.01"/>
+                        </svg>
+                    </div>
+                    <div class="gender-method-content">
+                        <h3 id="gender-method-title">Nota Metodológica — Identificação de Gênero</h3>
+                        <p>A classificação se refere exclusivamente ao <strong>primeiro autor</strong> e deve ser interpretada como uma previsão operacional, não como autodeclaração. O processo é determinístico e conserva <strong>“Indefinido”</strong> para nomes abreviados, coletivos, conflitos ou resultados ambíguos.</p>
+                        <div class="gender-method-steps">
+                            <div class="gender-method-step">
+                                <span class="method-step-number">1</span>
+                                <span><strong>Evidência prioritária:</strong> revisão manual por DOI e registros públicos verificáveis via ORCID/Wikidata.</span>
+                            </div>
+                            <div class="gender-method-step">
+                                <span class="method-step-number">2</span>
+                                <span><strong>Modelos de nomes:</strong> <em>names-dataset</em> como base principal e <em>gender-guesser</em> como apoio nas classificações prévias.</span>
+                            </div>
+                            <div class="gender-method-step">
+                                <span class="method-step-number">3</span>
+                                <span><strong>Regras de consistência:</strong> dicionário de nomes e reaproveitamento somente quando a mesma identidade aparece sem conflito.</span>
+                            </div>
+                        </div>
+                        <div class="gender-method-tags">
+                            <span class="gender-method-tag verified">✓ Prioriza evidência verificável</span>
+                            <span class="gender-method-tag neutral">Algoritmo: regras + correspondência de nomes</span>
+                            <span class="gender-method-tag neutral">IA generativa, imagem e texto: não utilizados</span>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
             <!-- Row 6: Listagem das Publicações & Acesso Aberto -->
             <div class="chart-card">
                 <div class="chart-header">
@@ -493,11 +558,11 @@
 
         <!-- Footer -->
         <footer class="dashboard-footer">
-            <p>Projeto Oceano &bull; Análise de publicações brasileiras sobre o oceano &bull; Fonte: OpenAlex &copy; 2026</p>
+            <p>Projeto Oceano &bull; Análise de publicações brasileiras sobre o oceano &bull; Fonte: OpenAlex &copy; 2026 &bull; <a class="footer-method-link" href="#gender-method">Metodologia de gênero</a></p>
         </footer>
     </div>
 
     <!-- Main Logic Script -->
-    <script src="app.js"></script>
+    <script src="app.js?v=1.0.2"></script>
 </body>
 </html>

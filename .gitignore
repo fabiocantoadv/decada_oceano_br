@@ -4,3 +4,7 @@ temp.json
 *.xlsx
 .gemini/
 .env
+__pycache__/
+crossref_author_metadata.json
+*.zip
+*.rar
