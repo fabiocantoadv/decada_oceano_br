@@ -529,6 +529,20 @@ body {
     margin-top: 12px;
 }
 
+.dashboard-footer p {
+    margin: 0;
+}
+
+.footer-method-link {
+    color: var(--primary-hover);
+    font-weight: 600;
+    text-decoration: none;
+}
+
+.footer-method-link:hover {
+    text-decoration: underline;
+}
+
 /* Produção Científica Table Styles */
 .table-card-content {
     display: flex;
@@ -1141,6 +1155,134 @@ body {
     background: rgba(66, 153, 225, 0.1);
     color: #1a5276;
     border-color: rgba(66, 153, 225, 0.3);
+}
+
+/* ─── Gender Method Card ─────────────────────────────────────────────────── */
+.gender-method-card {
+    background: linear-gradient(135deg, #effaf7 0%, #f4fbff 100%);
+    border: 1px solid rgba(66, 153, 225, 0.28) !important;
+    box-shadow: 0 3px 12px rgba(49, 130, 206, 0.09) !important;
+}
+
+.gender-method-inner {
+    display: flex;
+    gap: 20px;
+    align-items: flex-start;
+    padding: 4px 0;
+}
+
+.gender-method-icon {
+    flex-shrink: 0;
+    width: 42px;
+    height: 42px;
+    border-radius: var(--radius-md);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #24755f;
+    background: rgba(85, 179, 153, 0.16);
+}
+
+.gender-method-icon svg {
+    width: 21px;
+    height: 21px;
+}
+
+.gender-method-content h3 {
+    margin: 0 0 8px;
+    color: #1f5f50;
+    font-family: var(--font-heading);
+    font-size: 15px;
+    font-weight: 700;
+}
+
+.gender-method-content > p {
+    margin: 0 0 14px;
+    color: #285d52;
+    font-size: 13px;
+    line-height: 1.65;
+}
+
+.gender-method-steps {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 10px;
+}
+
+.gender-method-step {
+    display: flex;
+    gap: 8px;
+    align-items: flex-start;
+    min-height: 66px;
+    padding: 10px;
+    border: 1px solid rgba(85, 179, 153, 0.2);
+    border-radius: var(--radius-md);
+    background: rgba(255, 255, 255, 0.68);
+    color: #3d5d56;
+    font-size: 11px;
+    line-height: 1.5;
+}
+
+.method-step-number {
+    flex: 0 0 20px;
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    color: #fff;
+    background: #398b77;
+    font-size: 11px;
+    font-weight: 700;
+}
+
+.gender-method-tags {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-top: 12px;
+}
+
+.gender-method-tag {
+    padding: 4px 10px;
+    border: 1px solid;
+    border-radius: var(--radius-full);
+    font-size: 10px;
+    font-weight: 600;
+}
+
+.gender-method-tag.verified {
+    color: #276749;
+    background: rgba(72, 187, 120, 0.12);
+    border-color: rgba(72, 187, 120, 0.35);
+}
+
+.gender-method-tag.neutral {
+    color: #2b6cb0;
+    background: rgba(66, 153, 225, 0.1);
+    border-color: rgba(66, 153, 225, 0.3);
+}
+
+@media (max-width: 800px) {
+    .gender-method-steps {
+        grid-template-columns: 1fr;
+    }
+}
+
+@media (max-width: 576px) {
+    .gender-method-inner {
+        gap: 12px;
+    }
+
+    .gender-method-icon {
+        width: 34px;
+        height: 34px;
+    }
+
+    .gender-method-content h3 {
+        font-size: 13px;
+    }
 }
 
 /* ─── Gender Citations Panel v2 (gcb2) ───────────────────────────────────── */
