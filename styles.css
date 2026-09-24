@@ -558,7 +558,10 @@ body {
 }
 
 #table-filter-input,
-#table-inst-filter-input {
+#table-inst-filter-input,
+#table-country-filter-input,
+#table-source-filter-input,
+#table-author-filter-input {
     flex-grow: 1;
     padding: 10px 14px;
     font-size: 14px;
@@ -573,7 +576,10 @@ body {
 }
 
 #table-filter-input:focus,
-#table-inst-filter-input:focus {
+#table-inst-filter-input:focus,
+#table-country-filter-input:focus,
+#table-source-filter-input:focus,
+#table-author-filter-input:focus {
     border-color: #0069c0;
     box-shadow: 0 0 0 2px rgba(0, 105, 192, 0.15);
 }
@@ -1537,3 +1543,98 @@ body {
     font-style: italic;
 }
 
+
+/* ORCID ao lado do nome na tabela de autores */
+.orcid-link {
+    margin-left: 8px;
+    font-size: 11px;
+    color: var(--text-muted);
+    text-decoration: none;
+    white-space: nowrap;
+}
+.orcid-link::before {
+    content: "iD";
+    display: inline-block;
+    margin-right: 4px;
+    padding: 0 3px;
+    border-radius: 50%;
+    background: #A6CE39;
+    color: #fff;
+    font-size: 8px;
+    font-weight: 700;
+    line-height: 13px;
+    vertical-align: 1px;
+}
+.orcid-link:hover {
+    color: #4a7c0b;
+    text-decoration: underline;
+}
+
+/* Listagem das publicações */
+.publications-table-container {
+    max-height: none;
+    overflow-x: auto;
+}
+.publications-table {
+    table-layout: fixed;
+    min-width: 900px;
+}
+.publications-table th.col-pub-title { width: 38%; }
+.publications-table th.col-pub-authors { width: 22%; }
+.publications-table th.col-pub-source { width: 16%; }
+.publications-table th.col-pub-year { width: 70px; text-align: center; }
+.publications-table th.col-pub-doi { width: 18%; }
+.publications-table td {
+    vertical-align: top;
+    line-height: 1.45;
+}
+.publications-table td.cell-pub-title a {
+    color: var(--text-main);
+    font-weight: 600;
+    text-decoration: none;
+}
+.publications-table td.cell-pub-title a:hover {
+    color: #2b6cb0;
+    text-decoration: underline;
+}
+.publications-table td.cell-pub-authors,
+.publications-table td.cell-pub-source {
+    color: var(--text-muted);
+    font-size: 12px;
+}
+.publications-table td.cell-pub-year {
+    text-align: center;
+}
+.publications-table td.cell-pub-doi {
+    font-size: 12px;
+    word-break: break-all;
+}
+.publications-table td.cell-pub-doi a {
+    color: #2b6cb0;
+    text-decoration: none;
+}
+.publications-table td.cell-pub-doi a:hover {
+    text-decoration: underline;
+}
+.publications-footer {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 12px;
+    padding-top: 10px;
+    flex-wrap: wrap;
+}
+.publications-count-info {
+    font-size: 12px;
+    color: var(--text-muted);
+}
+.publications-footer .table-pagination {
+    display: flex;
+    gap: 4px;
+    align-items: center;
+    user-select: none;
+}
+.table-pagination span.disabled {
+    opacity: 0.35;
+    cursor: default;
+}

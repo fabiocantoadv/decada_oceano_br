@@ -16,10 +16,10 @@
     <script src="lib/vega-embed.min.js"></script>
     
     <!-- Stylesheet -->
-    <link rel="stylesheet" href="styles.css?v=1.0.4">
+    <link rel="stylesheet" href="styles.css?v=2.0.0">
     
     <!-- Pre-aggregated data loaded from local JS to bypass CORS -->
-    <script src="dashboard_data.js?v=1.0.4"></script>
+    <script src="dashboard_data.js?v=2.0.0"></script>
 </head>
 <body>
     <script>
@@ -73,7 +73,7 @@
         </header>
 
         <!-- KPI Cards Grid -->
-        <section class="kpi-grid">
+        <section class="kpi-grid" style="grid-template-columns: minmax(260px, 340px);">
             <div class="kpi-card">
                 <div class="kpi-icon-wrapper blue">
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -84,51 +84,7 @@
                 <div class="kpi-details">
                     <h3>Total de Publicações</h3>
                     <p id="kpi-total-publications" class="kpi-value">-</p>
-                    <span id="kpi-pub-context" class="kpi-context">todos os tipos</span>
-                </div>
-            </div>
-
-            <div class="kpi-card">
-                <div class="kpi-icon-wrapper orange">
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                        <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/>
-                        <polyline points="22 4 12 14.01 9 11.01"/>
-                    </svg>
-                </div>
-                <div class="kpi-details">
-                    <h3>Total de Citações</h3>
-                    <p id="kpi-total-citations" class="kpi-value">-</p>
-                    <span class="kpi-context">impacto acumulado</span>
-                </div>
-            </div>
-
-            <div class="kpi-card">
-                <div class="kpi-icon-wrapper green">
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                        <line x1="18" y1="20" x2="18" y2="10"/>
-                        <line x1="12" y1="20" x2="12" y2="4"/>
-                        <line x1="6" y1="20" x2="6" y2="14"/>
-                    </svg>
-                </div>
-                <div class="kpi-details">
-                    <h3>Média de Citações</h3>
-                    <p id="kpi-avg-citations" class="kpi-value">-</p>
-                    <span class="kpi-context">por publicação</span>
-                </div>
-            </div>
-
-            <div class="kpi-card">
-                <div class="kpi-icon-wrapper purple">
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                        <path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/>
-                        <polyline points="3.27 6.96 12 12.01 20.73 6.96"/>
-                        <line x1="12" y1="22.08" x2="12" y2="12"/>
-                    </svg>
-                </div>
-                <div class="kpi-details">
-                    <h3>Periódicos</h3>
-                    <p id="kpi-total-sources" class="kpi-value">-</p>
-                    <span class="kpi-context">fontes de publicação</span>
+                    <span id="kpi-pub-context" class="kpi-context">artigos e revisões</span>
                 </div>
             </div>
         </section>
@@ -146,10 +102,10 @@
             <div class="filters-grid">
                 <!-- Year range filter -->
                 <div class="filter-group">
-                    <label>Ano de Publicação (<span id="year-range-display">1915 - 2025</span>)</label>
+                    <label>Ano de Publicação (<span id="year-range-display">-</span>)</label>
                     <div class="range-slider-container">
-                        <input type="range" id="filter-year-min" min="1915" max="2025" value="1915" class="slider">
-                        <input type="range" id="filter-year-max" min="1915" max="2025" value="2025" class="slider">
+                        <input type="range" id="filter-year-min" class="slider">
+                        <input type="range" id="filter-year-max" class="slider">
                     </div>
                 </div>
 
@@ -191,7 +147,7 @@
 
         <!-- Main Dashboard Visualization Grid -->
         <main class="dashboard-grid">
-            <!-- Row 1: Temporal Evolution & Publication Language -->
+            <!-- Linha 1: Evolução temporal e Idioma -->
             <div class="chart-card">
                 <div class="chart-header">
                     <div class="chart-title-area">
@@ -223,21 +179,48 @@
                 <div id="chart-language" class="chart-container donut-container"></div>
             </div>
 
-            <!-- Row 2: Scientific Production Table & Areas -->
+            <!-- Linha 2: Tipo de Documento e Colaboração científica -->
             <div class="chart-card">
                 <div class="chart-header">
                     <div class="chart-title-area">
-                        <h2>Produção Científica</h2>
-                        <span class="chart-subtitle">Produção de publicações detalhada por fonte</span>
+                        <h2>Tipo de Documento</h2>
+                        <span class="chart-subtitle">Distribuição por tipo de publicação</span>
                     </div>
                     <div class="chart-actions">
-                        <button class="chart-clear-btn" id="btn-clear-sources" style="display: none;">Limpar Filtro</button>
+                        <button class="chart-clear-btn" id="btn-clear-type" style="display: none;">Limpar Filtro</button>
+                    </div>
+                </div>
+                <div id="chart-type" class="chart-container donut-container"></div>
+            </div>
+
+            <div class="chart-card">
+                <div class="chart-header">
+                    <div class="chart-title-area">
+                        <h2>Colaboração Científica</h2>
+                        <span class="chart-subtitle">Somente autores brasileiros (1 país) vs colaboração internacional (2 ou mais países)</span>
+                    </div>
+                    <div class="chart-actions">
+                        <button class="chart-clear-btn" id="btn-clear-collab" style="display: none;">Limpar Filtro</button>
+                    </div>
+                </div>
+                <div id="chart-collab" class="chart-container donut-container"></div>
+            </div>
+
+            <!-- Linha 3: Autores e Instituições -->
+            <div class="chart-card">
+                <div class="chart-header">
+                    <div class="chart-title-area">
+                        <h2>Autores</h2>
+                        <span class="chart-subtitle">Publicações por autor, com ORCID quando disponível</span>
+                    </div>
+                    <div class="chart-actions">
+                        <button class="chart-clear-btn" id="btn-clear-authors" style="display: none;">Limpar Filtro</button>
                     </div>
                 </div>
                 <div class="table-card-content">
                     <div class="table-filter-bar">
-                        <input type="text" id="table-filter-input" placeholder="Buscar periódico...">
-                        <button id="table-filter-btn" class="table-filter-btn">
+                        <input type="text" id="table-author-filter-input" placeholder="Buscar autor...">
+                        <button id="table-author-filter-btn" class="table-filter-btn">
                             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" class="search-icon">
                                 <circle cx="11" cy="11" r="8"></circle>
                                 <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
@@ -248,12 +231,12 @@
                         <table class="data-table">
                             <thead>
                                 <tr>
-                                    <th id="th-rank" class="sortable">#</th>
-                                    <th id="th-source" class="sortable">Produção Científica por Fonte <span class="sort-indicator"></span></th>
-                                    <th id="th-count" class="sortable desc">Publicações <span class="sort-indicator">▼</span></th>
+                                    <th id="th-author-rank" class="sortable">#</th>
+                                    <th id="th-author-author" class="sortable">Autor <span class="sort-indicator"></span></th>
+                                    <th id="th-author-count" class="sortable desc">Publicações <span class="sort-indicator">▼</span></th>
                                 </tr>
                             </thead>
-                            <tbody id="table-body-sources">
+                            <tbody id="table-body-authors">
                                 <!-- Dynamic rows populated by JS -->
                             </tbody>
                         </table>
@@ -264,22 +247,8 @@
             <div class="chart-card">
                 <div class="chart-header">
                     <div class="chart-title-area">
-                        <h2>Áreas</h2>
-                        <span class="chart-subtitle">Classificação por áreas de conhecimento</span>
-                    </div>
-                    <div class="chart-actions">
-                        <button class="chart-clear-btn" id="btn-clear-areas" style="display: none;">Limpar Filtro</button>
-                    </div>
-                </div>
-                <div id="chart-areas" class="chart-container treemap-container"></div>
-            </div>
-
-            <!-- Row 3: Institutions Table & Subareas -->
-            <div class="chart-card">
-                <div class="chart-header">
-                    <div class="chart-title-area">
                         <h2>Instituições</h2>
-                        <span class="chart-subtitle">Publicações detalhadas por universidade</span>
+                        <span class="chart-subtitle">Publicações por instituição dos autores</span>
                     </div>
                     <div class="chart-actions">
                         <button class="chart-clear-btn" id="btn-clear-institutions" style="display: none;">Limpar Filtro</button>
@@ -300,7 +269,7 @@
                             <thead>
                                 <tr>
                                     <th id="th-inst-rank" class="sortable">#</th>
-                                    <th id="th-inst-name" class="sortable">Universidades <span class="sort-indicator"></span></th>
+                                    <th id="th-inst-name" class="sortable">Instituição <span class="sort-indicator"></span></th>
                                     <th id="th-inst-count" class="sortable desc">Publicações <span class="sort-indicator">▼</span></th>
                                 </tr>
                             </thead>
@@ -312,10 +281,129 @@
                 </div>
             </div>
 
+            <!-- Linha 4: Fontes e Países -->
             <div class="chart-card">
                 <div class="chart-header">
                     <div class="chart-title-area">
-                        <h2>Subareas</h2>
+                        <h2>Fontes</h2>
+                        <span class="chart-subtitle">Periódicos e demais fontes das publicações</span>
+                    </div>
+                    <div class="chart-actions">
+                        <button class="chart-clear-btn" id="btn-clear-sources" style="display: none;">Limpar Filtro</button>
+                    </div>
+                </div>
+                <div class="table-card-content">
+                    <div class="table-filter-bar">
+                        <input type="text" id="table-source-filter-input" placeholder="Buscar fonte...">
+                        <button id="table-source-filter-btn" class="table-filter-btn">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" class="search-icon">
+                                <circle cx="11" cy="11" r="8"></circle>
+                                <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+                            </svg>
+                        </button>
+                    </div>
+                    <div class="table-scroll-container">
+                        <table class="data-table">
+                            <thead>
+                                <tr>
+                                    <th id="th-source-rank" class="sortable">#</th>
+                                    <th id="th-source-source" class="sortable">Fonte <span class="sort-indicator"></span></th>
+                                    <th id="th-source-count" class="sortable desc">Publicações <span class="sort-indicator">▼</span></th>
+                                    <th id="th-source-pct" class="sortable">% das publicações</th>
+                                </tr>
+                            </thead>
+                            <tbody id="table-body-sources">
+                                <!-- Dynamic rows populated by JS -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <div class="chart-card">
+                <div class="chart-header">
+                    <div class="chart-title-area">
+                        <h2>Países</h2>
+                        <span class="chart-subtitle">Países dos autores (Brasil = 100%, critério da coleta)</span>
+                    </div>
+                    <div class="chart-actions">
+                        <button class="chart-clear-btn" id="btn-clear-countries" style="display: none;">Limpar Filtro</button>
+                    </div>
+                </div>
+                <div class="table-card-content">
+                    <div class="table-filter-bar">
+                        <input type="text" id="table-country-filter-input" placeholder="Buscar país...">
+                        <button id="table-country-filter-btn" class="table-filter-btn">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" class="search-icon">
+                                <circle cx="11" cy="11" r="8"></circle>
+                                <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+                            </svg>
+                        </button>
+                    </div>
+                    <div class="table-scroll-container">
+                        <table class="data-table">
+                            <thead>
+                                <tr>
+                                    <th id="th-country-rank" class="sortable">#</th>
+                                    <th id="th-country-country" class="sortable">País <span class="sort-indicator"></span></th>
+                                    <th id="th-country-count" class="sortable desc">Publicações <span class="sort-indicator">▼</span></th>
+                                    <th id="th-country-pct" class="sortable">% das publicações</th>
+                                </tr>
+                            </thead>
+                            <tbody id="table-body-countries">
+                                <!-- Dynamic rows populated by JS -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Linha 5: Acesso Aberto e Modelo de Acesso -->
+            <div class="chart-card">
+                <div class="chart-header">
+                    <div class="chart-title-area">
+                        <h2>Acesso Aberto</h2>
+                        <span class="chart-subtitle">Publicações em acesso aberto vs fechado</span>
+                    </div>
+                    <div class="chart-actions">
+                        <button class="chart-clear-btn" id="btn-clear-oa-pie" style="display: none;">Limpar Filtro</button>
+                    </div>
+                </div>
+                <div id="chart-oa-pie" class="chart-container donut-container"></div>
+            </div>
+
+            <div class="chart-card">
+                <div class="chart-header">
+                    <div class="chart-title-area">
+                        <h2>Modelo de Acesso</h2>
+                        <span class="chart-subtitle">Publicações por modelo de acesso (OpenAlex: oa_status)</span>
+                    </div>
+                    <div class="chart-actions">
+                        <button class="chart-clear-btn" id="btn-clear-oa-status" style="display: none;">Limpar Filtro</button>
+                    </div>
+                </div>
+                <div id="chart-oa-status" class="chart-container "></div>
+            </div>
+
+            <!-- Linha 6: Áreas -->
+            <div class="chart-card span-all">
+                <div class="chart-header">
+                    <div class="chart-title-area">
+                        <h2>Áreas</h2>
+                        <span class="chart-subtitle">Classificação por áreas de conhecimento</span>
+                    </div>
+                    <div class="chart-actions">
+                        <button class="chart-clear-btn" id="btn-clear-areas" style="display: none;">Limpar Filtro</button>
+                    </div>
+                </div>
+                <div id="chart-areas" class="chart-container treemap-container"></div>
+            </div>
+
+            <!-- Linha 7: Subáreas -->
+            <div class="chart-card span-all">
+                <div class="chart-header">
+                    <div class="chart-title-area">
+                        <h2>Subáreas</h2>
                         <span class="chart-subtitle">Percentual das principais subáreas</span>
                     </div>
                     <div class="chart-actions">
@@ -325,232 +413,47 @@
                 <div id="chart-subareas" class="chart-container treemap-container"></div>
             </div>
 
-            <!-- Row 4: Production by Country & Research Topics -->
-            <div class="chart-card">
-                <div class="chart-header">
-                    <div class="chart-title-area">
-                        <h2>Produção Científica Por País</h2>
-                        <span class="chart-subtitle">Percentual de publicações por país</span>
-                    </div>
-                    <div class="chart-actions">
-                        <button class="chart-clear-btn" id="btn-clear-countries" style="display: none;">Limpar Filtro</button>
-                    </div>
-                </div>
-                <div id="chart-countries" class="chart-container donut-container"></div>
-            </div>
-
-            <div class="chart-card">
+            <!-- Linha 8: Tópicos de Pesquisa -->
+            <div class="chart-card span-all">
                 <div class="chart-header">
                     <div class="chart-title-area">
                         <h2>Tópicos de Pesquisa</h2>
-                        <span class="chart-subtitle">Percentual das principais áreas do OpenAlex</span>
+                        <span class="chart-subtitle">Todos os tópicos atribuídos às publicações (até 3 por obra)</span>
                     </div>
                     <div class="chart-actions">
                         <button class="chart-clear-btn" id="btn-clear-topics" style="display: none;">Limpar Filtro</button>
                     </div>
                 </div>
-                <div id="chart-topics" class="chart-container donut-container"></div>
+                <div id="chart-topics" class="chart-container treemap-container"></div>
             </div>
-
-            <!-- Row 5: Document Type & Gender -->
-            <div class="chart-card">
-                <div class="chart-header">
-                    <div class="chart-title-area">
-                        <h2>Distribuição por Tipo de Documento</h2>
-                        <span class="chart-subtitle">Distribuição por tipo de documento</span>
-                    </div>
-                    <div class="chart-actions">
-                        <button class="chart-clear-btn" id="btn-clear-type" style="display: none;">Limpar Filtro</button>
-                    </div>
-                </div>
-                <div id="chart-type" class="chart-container"></div>
-            </div>
-
-            <div class="chart-card">
-                <div class="chart-header">
-                    <div class="chart-title-area">
-                        <h2>Gênero</h2>
-                        <span class="chart-subtitle">Previsão de gênero do primeiro autor</span>
-                    </div>
-                    <div class="chart-actions">
-                        <button class="chart-clear-btn" id="btn-clear-gender" style="display: none;">Limpar Filtro</button>
-                    </div>
-                </div>
-                <div id="chart-gender" class="chart-container donut-container"></div>
-            </div>
-
-            <!-- Metodologia de identificação de gênero -->
-            <section class="chart-card span-all gender-method-card" id="gender-method" aria-labelledby="gender-method-title">
-                <div class="gender-method-inner">
-                    <div class="gender-method-icon" aria-hidden="true">
-                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                            <path d="M12 22a10 10 0 1 0 0-20 10 10 0 0 0 0 20Z"/>
-                            <path d="M12 16v-4"/>
-                            <path d="M12 8h.01"/>
-                        </svg>
-                    </div>
-                    <div class="gender-method-content">
-                        <h3 id="gender-method-title">Nota Metodológica — Identificação de Gênero</h3>
-                        <p>A classificação se refere exclusivamente ao <strong>primeiro autor</strong> e deve ser interpretada como uma previsão operacional, não como autodeclaração. O processo é determinístico e conserva <strong>“Indefinido”</strong> para nomes abreviados, coletivos, conflitos ou resultados ambíguos.</p>
-                        <div class="gender-method-steps">
-                            <div class="gender-method-step">
-                                <span class="method-step-number">1</span>
-                                <span><strong>Evidência prioritária:</strong> revisão manual por DOI e registros públicos verificáveis via ORCID/Wikidata.</span>
-                            </div>
-                            <div class="gender-method-step">
-                                <span class="method-step-number">2</span>
-                                <span><strong>Modelos de nomes:</strong> <em>names-dataset</em> como base principal e <em>gender-guesser</em> como apoio nas classificações prévias.</span>
-                            </div>
-                            <div class="gender-method-step">
-                                <span class="method-step-number">3</span>
-                                <span><strong>Regras de consistência:</strong> dicionário de nomes e reaproveitamento somente quando a mesma identidade aparece sem conflito.</span>
-                            </div>
-                        </div>
-                        <div class="gender-method-tags">
-                            <span class="gender-method-tag verified">✓ Prioriza evidência verificável</span>
-                            <span class="gender-method-tag neutral">Algoritmo: regras + correspondência de nomes</span>
-                            <span class="gender-method-tag neutral">IA generativa, imagem e texto: não utilizados</span>
-                        </div>
-                    </div>
-                </div>
-            </section>
-
-            <!-- Row 6: Listagem das Publicações & Acesso Aberto -->
-            <div class="chart-card">
+            <!-- Linha 9: Listagem das Publicações -->
+            <div class="chart-card span-all">
                 <div class="chart-header">
                     <div class="chart-title-area">
                         <h2>Listagem das Publicações</h2>
-                        <span class="chart-subtitle">Publicações detalhadas com títulos, autores e links</span>
+                        <span class="chart-subtitle">Publicações filtradas, das mais citadas para as menos citadas</span>
                     </div>
                 </div>
                 <div class="table-card-content">
-                    <div class="table-scroll-container" style="max-height: 290px;">
-                        <table class="data-table">
+                    <div class="table-scroll-container publications-table-container">
+                        <table class="data-table publications-table">
                             <thead>
                                 <tr>
-                                    <th class="cell-rank">#</th>
-                                    <th>Título do Artigo</th>
-                                    <th>Autor</th>
-                                    <th>Revista / Fonte</th>
-                                    <th>Ano</th>
-                                    <th class="cell-count">Citações</th>
+                                    <th class="col-pub-title">Título</th>
+                                    <th class="col-pub-authors">Autores</th>
+                                    <th class="col-pub-source">Fonte</th>
+                                    <th class="col-pub-year">Ano</th>
+                                    <th class="col-pub-doi">DOI</th>
                                 </tr>
                             </thead>
-                            <tbody id="table-body-publications-list">
-                                <!-- Dynamic rows populated by JS -->
+                            <tbody id="table-body-publications">
+                                <!-- Linhas preenchidas pelo JS -->
                             </tbody>
                         </table>
                     </div>
-                    <div class="table-footer-bar" style="display: flex; justify-content: space-between; align-items: center; padding-top: 8px;">
-                        <div class="export-options" style="font-size: 12px; color: var(--text-muted);">
-                            Export: 
-                            <a href="#" id="export-raw-btn" class="export-link" style="color: var(--primary-hover); font-weight: 600; text-decoration: none; margin: 0 4px;">Raw <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="width:12px; height:12px; display:inline-block; vertical-align:middle;"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg></a> | 
-                            <a href="#" id="export-formatted-btn" class="export-link" style="color: var(--primary-hover); font-weight: 600; text-decoration: none; margin: 0 4px;">Formatted <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="width:12px; height:12px; display:inline-block; vertical-align:middle;"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg></a>
-                        </div>
-                        <div id="table-pagination" class="table-pagination" style="display: flex; gap: 4px; align-items: center; user-select: none;">
-                            <!-- Pagination links populated dynamically -->
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <div class="chart-card">
-                <div class="chart-header">
-                    <div class="chart-title-area">
-                        <h2>Acesso Aberto</h2>
-                        <span class="chart-subtitle">Percentual de publicações em acesso aberto</span>
-                    </div>
-                    <div class="chart-actions">
-                        <button class="chart-clear-btn" id="btn-clear-oa-pie" style="display: none;">Limpar Filtro</button>
-                    </div>
-                </div>
-                <div id="chart-oa-pie" class="chart-container"></div>
-            </div>
-
-            <!-- Row 7: OA Status (Full-width) -->
-            <div class="chart-card span-all">
-                <div class="chart-header">
-                    <div class="chart-title-area">
-                        <h2>OA Status</h2>
-                        <span class="chart-subtitle">Distribuição das publicações em acesso aberto por categoria</span>
-                    </div>
-                    <div class="chart-actions">
-                        <button class="chart-clear-btn" id="btn-clear-oa-status-bar" style="display: none;">Limpar Filtro</button>
-                    </div>
-                </div>
-                <div id="chart-oa-status-bar" class="chart-container large-chart"></div>
-            </div>
-
-            <!-- Row 8: Análise de Citações por Gênero (Full-width) -->
-            <div class="chart-card span-all" id="card-gender-citations">
-                <div class="chart-header">
-                    <div class="chart-title-area">
-                        <h2>Análise de Citações por Gênero</h2>
-                        <span class="chart-subtitle">Comparação de impacto científico entre autoras e autores do primeiro artigo</span>
-                    </div>
-                </div>
-                <div id="gender-citations-panel" class="gender-citations-panel"></div>
-            </div>
-
-            <!-- Nota metodológica: defasagem de indexação pós-2021 -->
-            <div class="chart-card span-all indexing-note-card" id="card-indexing-note">
-                <div class="indexing-note-inner">
-                    <div class="indexing-note-icon">
-                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                            <circle cx="12" cy="12" r="10"/>
-                            <line x1="12" y1="8" x2="12" y2="12"/>
-                            <line x1="12" y1="16" x2="12.01" y2="16"/>
-                        </svg>
-                    </div>
-                    <div class="indexing-note-content">
-                        <h3>Nota Metodológica — Defasagem de Indexação Pós-2021</h3>
-                        <p>A aparente queda na produção científica sobre ODS 14 a partir de 2022 <strong>não necessariamente reflete uma redução real</strong> na atividade de pesquisa. O OpenAlex e outras bases bibliométricas indexam artigos com uma defasagem típica de <strong>12 a 24 meses</strong> para periódicos de acesso fechado. Adicionalmente, projetos interrompidos durante a pandemia de COVID-19 (2020–2021) geraram publicações concentradas em 2021–2022, criando um pico artificial seguido de queda estatística. <strong>Os dados de 2019–2021 são os mais robustos e confiáveis</strong> para análise de tendências.</p>
-                        <div class="indexing-note-tags">
-
-                            <span class="note-tag green">✓ Dados 2000–2021: alta confiabilidade</span>
-                            <span class="note-tag blue">ℹ Fonte: OpenAlex — atualização contínua</span>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Row 9: Artigos mais citados por autoras (Full-width) -->
-            <div class="chart-card span-all">
-                <div class="chart-header">
-                    <div class="chart-title-area">
-                        <h2>Artigos mais citados por autoras</h2>
-                        <span class="chart-subtitle">Publicações com primeiro autor de gênero feminino, ordenadas por citações</span>
-                    </div>
-                    <div class="chart-actions">
-                        <button class="chart-clear-btn" id="btn-clear-author" style="display: none;">Limpar Filtro</button>
-                    </div>
-                </div>
-                <div class="table-card-content">
-                    <div class="table-filter-bar">
-                        <input type="text" id="table-autoras-filter-input" placeholder="Buscar autora ou título...">
-                        <button id="table-autoras-filter-btn" class="table-filter-btn">
-                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" class="search-icon">
-                                <circle cx="11" cy="11" r="8"></circle>
-                                <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
-                            </svg>
-                        </button>
-                    </div>
-                    <div class="table-scroll-container" style="max-height: 420px;">
-                        <table class="data-table">
-                            <thead>
-                                <tr>
-                                    <th class="cell-rank">#</th>
-                                    <th>Autora</th>
-                                    <th>Título do Artigo</th>
-                                    <th>Fonte</th>
-                                    <th>Ano</th>
-                                    <th class="cell-count">Citações</th>
-                                </tr>
-                            </thead>
-                            <tbody id="table-body-autoras">
-                                <!-- Dynamic rows populated by JS -->
-                            </tbody>
-                        </table>
+                    <div class="publications-footer">
+                        <span id="publications-count-info" class="publications-count-info"></span>
+                        <div id="publications-pagination" class="table-pagination"></div>
                     </div>
                 </div>
             </div>
@@ -558,11 +461,11 @@
 
         <!-- Footer -->
         <footer class="dashboard-footer">
-            <p>Projeto Oceano &bull; Análise de publicações brasileiras sobre o oceano &bull; Fonte: OpenAlex &copy; 2026 &bull; <a class="footer-method-link" href="#gender-method">Metodologia de gênero</a></p>
+            <p>Projeto Oceano &bull; Análise de publicações brasileiras sobre o oceano &bull; Fonte: OpenAlex &copy; 2026</p>
         </footer>
     </div>
 
     <!-- Main Logic Script -->
-    <script src="app.js?v=1.0.2"></script>
+    <script src="app.js?v=2.0.0"></script>
 </body>
 </html>
