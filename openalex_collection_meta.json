@@ -1,0 +1,18 @@
+{
+  "collected_at": "2026-09-24T20:53:45+00:00",
+  "finished_at": "2026-09-24T20:59:46+00:00",
+  "source": "https://api.openalex.org/works",
+  "queries": {
+    "textual": "publication_year:>2017,authorships.countries:BR,type:article|review,title_and_abstract.search:(mar OR marinho OR marinha OR marítimo OR oceano OR oceânico OR costeiro OR offshore OR sea OR marine OR maritime OR ocean OR oceanic OR coastal) AND (\"meio ambiente\" OR ambiental OR peixes OR espécies OR fauna OR biodiversidade OR recifes OR corais OR comunidades OR pescadores OR ribeirinhos OR populações OR preservação OR conservação OR poluição OR aquecimento OR \"mudanças climáticas\" OR \"desenvolvimento sustentável\" OR \"economia azul\" OR \"currículo azul\" OR \"carbono azul\" OR \"escolas azuis\" OR areia OR environment OR environmental OR fish OR species OR biodiversity OR reefs OR corals OR communities OR fishers OR riverside OR populations OR preservation OR conservation OR pollution OR warming OR \"climate change\" OR \"sustainable development\" OR \"blue economy\" OR \"blue curriculum\" OR \"blue carbon\" OR \"blue schools\" OR sand)",
+    "subfields": "publication_year:>2017,authorships.countries:BR,type:article|review,primary_topic.subfield.id:1910|2212"
+  },
+  "api_counts_at_start": {
+    "textual": 17854,
+    "subfields": 6559
+  },
+  "records_per_query": {
+    "textual": 17861,
+    "subfields": 6559
+  },
+  "unique_records": 22687
+}
