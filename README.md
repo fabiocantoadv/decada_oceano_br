@@ -57,4 +57,9 @@ git push
 
 Para ver localmente, basta abrir `index.html` no navegador.
 
+> **Cache:** o `build_dashboard.py` grava em `index.html` uma versão (`?v=…`)
+> calculada a partir do conteúdo de `app.js`, `styles.css` e `dashboard_data.js`.
+> Depois de editar qualquer um desses arquivos, rode `python3 build_dashboard.py`
+> antes do commit, para os navegadores baixarem a versão nova.
+
 Baseado no projeto [oceanvega](https://github.com/wadsonlemos/oceanvega).

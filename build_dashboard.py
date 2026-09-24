@@ -34,8 +34,10 @@ Campos por obra (ordem em "data"):
                        (sustainable_development_goals do OpenAlex, score >= 0,4)
 """
 import csv
+import hashlib
 import json
 import os
+import re
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 RAW_DIR = os.path.join(HERE, "openalex_raw")
@@ -174,3 +176,21 @@ with open(OUT_JS, "w", encoding="utf-8") as f:
 print(f"{len(rows)} obras únicas (novas por busca: {per_query})")
 print({k: len(v) for k, v in dicts.items()})
 print(f"dashboard_data.js: {os.path.getsize(OUT_JS)/1e6:.1f} MB")
+
+
+# Cache: o index.html referencia os arquivos com ?v=<hash do conteúdo>, para o
+# navegador (e o GitHub Pages) baixarem a versão nova sempre que algo mudar.
+def stamp_asset_versions():
+    index_path = os.path.join(HERE, "index.html")
+    with open(index_path, encoding="utf-8") as f:
+        html = f.read()
+    for asset in ("styles.css", "dashboard_data.js", "app.js"):
+        with open(os.path.join(HERE, asset), "rb") as f:
+            digest = hashlib.sha1(f.read()).hexdigest()[:10]
+        html = re.sub(re.escape(asset) + r"\?v=[^\"']*", f"{asset}?v={digest}", html)
+    with open(index_path, "w", encoding="utf-8") as f:
+        f.write(html)
+    print("Versões no index.html atualizadas (cache).")
+
+
+stamp_asset_versions()
