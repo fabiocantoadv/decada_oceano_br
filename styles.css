@@ -1689,3 +1689,10 @@ body {
         grid-template-columns: 1fr;
     }
 }
+
+/* Gráfico de ODS: altura definida pelo número de barras */
+.chart-container.sdg-container {
+    display: block;
+    height: auto;
+    min-height: 0;
+}

@@ -70,6 +70,30 @@ const COLLAB_LABELS = {
     'internacional': 'Colaboração internacional'
 };
 
+// Objetivos de Desenvolvimento Sustentável: nomes oficiais em português e cores da ONU
+const SDG_INFO = {
+    1:  { name: 'Erradicação da pobreza', color: '#E5243B' },
+    2:  { name: 'Fome zero e agricultura sustentável', color: '#DDA63A' },
+    3:  { name: 'Saúde e bem-estar', color: '#4C9F38' },
+    4:  { name: 'Educação de qualidade', color: '#C5192D' },
+    5:  { name: 'Igualdade de gênero', color: '#FF3A21' },
+    6:  { name: 'Água potável e saneamento', color: '#26BDE2' },
+    7:  { name: 'Energia limpa e acessível', color: '#FCC30B' },
+    8:  { name: 'Trabalho decente e crescimento econômico', color: '#A21942' },
+    9:  { name: 'Indústria, inovação e infraestrutura', color: '#FD6925' },
+    10: { name: 'Redução das desigualdades', color: '#DD1367' },
+    11: { name: 'Cidades e comunidades sustentáveis', color: '#FD9D24' },
+    12: { name: 'Consumo e produção responsáveis', color: '#BF8B2E' },
+    13: { name: 'Ação contra a mudança global do clima', color: '#3F7E44' },
+    14: { name: 'Vida na água', color: '#0A97D9' },
+    15: { name: 'Vida terrestre', color: '#56C02B' },
+    16: { name: 'Paz, justiça e instituições eficazes', color: '#00689D' },
+    17: { name: 'Parcerias e meios de implementação', color: '#19486A' }
+};
+function sdgLabel(n) {
+    return `ODS ${n} – ${SDG_INFO[n] ? SDG_INFO[n].name : ''}`;
+}
+
 // Limites de ano calculados a partir dos dados em init()
 let YEAR_MIN = 0;
 let YEAR_MAX = 0;
@@ -89,7 +113,8 @@ function defaultFilters() {
         oaStatus: 'all',
         collab: 'all', // 'nacional' | 'internacional'
         source: 'all', // fonte exata (clique na tabela); a busca do topo é por trecho
-        author: 'all'  // índice do autor em dicts.authors
+        author: 'all', // índice do autor em dicts.authors
+        sdg: 'all'     // número do ODS (1–17)
     };
 }
 
@@ -178,6 +203,7 @@ function decompressData() {
         wid: item[12],
         doi: item[13],
         citations: item[14],
+        sdgs: item[15],
         is_oa: OA_OPEN_STATUSES.includes(d.oa_statuses[item[9]]),
         count: 1
     }));
@@ -338,6 +364,7 @@ function setupEventListeners() {
     document.getElementById('btn-clear-oa-pie').addEventListener('click', () => { activeFilters.openAccess = 'all'; updateDashboard(); });
     document.getElementById('btn-clear-oa-status').addEventListener('click', () => { activeFilters.oaStatus = 'all'; updateDashboard(); });
     document.getElementById('btn-clear-collab').addEventListener('click', () => { activeFilters.collab = 'all'; updateDashboard(); });
+    document.getElementById('btn-clear-sdg').addEventListener('click', () => { activeFilters.sdg = 'all'; updateDashboard(); });
     document.getElementById('btn-clear-authors').addEventListener('click', () => { activeFilters.author = 'all'; updateDashboard(); });
     document.getElementById('btn-clear-sources').addEventListener('click', () => { activeFilters.source = 'all'; updateDashboard(); });
     document.getElementById('btn-clear-topics').addEventListener('click', () => { activeFilters.topic = 'all'; updateDashboard(); });
@@ -407,6 +434,7 @@ function updateDashboard() {
         if (f.collab !== 'all' && item.collab !== f.collab) return false;
         if (f.source !== 'all' && item.source !== f.source) return false;
         if (f.author !== 'all' && !item.authors.includes(f.author)) return false;
+        if (f.sdg !== 'all' && !item.sdgs.includes(f.sdg)) return false;
         return true;
     });
 
@@ -427,6 +455,7 @@ function updateDashboard() {
     renderOAPieChart();
     renderOAStatusBarChart();
     renderCollabChart();
+    renderSDGChart();
     renderPublicationsTable();
 }
 
@@ -463,6 +492,7 @@ function renderActiveFiltersBar() {
     if (f.country !== 'all') tag("País", f.country, () => { activeFilters.country = 'all'; updateDashboard(); });
     if (f.openAccess !== 'all') tag("Acesso", f.openAccess === 'aberto' ? 'Aberto' : 'Fechado', () => { activeFilters.openAccess = 'all'; updateDashboard(); });
     if (f.oaStatus !== 'all') tag("Modelo de acesso", OA_STATUS_MAP[f.oaStatus] || f.oaStatus, () => { activeFilters.oaStatus = 'all'; updateDashboard(); });
+    if (f.sdg !== 'all') tag("ODS", sdgLabel(f.sdg), () => { activeFilters.sdg = 'all'; updateDashboard(); });
     if (f.author !== 'all') tag("Autor", authorLabel(f.author), () => { activeFilters.author = 'all'; updateDashboard(); });
     if (f.source !== 'all') tag("Fonte", f.source, () => { activeFilters.source = 'all'; updateDashboard(); });
     if (f.collab !== 'all') tag("Colaboração", COLLAB_LABELS[f.collab], () => { activeFilters.collab = 'all'; updateDashboard(); });
@@ -481,6 +511,7 @@ function updateChartClearButtonsVisibility() {
     show('btn-clear-countries', activeFilters.country !== 'all');
     show('btn-clear-oa-pie', activeFilters.openAccess !== 'all');
     show('btn-clear-oa-status', activeFilters.oaStatus !== 'all');
+    show('btn-clear-sdg', activeFilters.sdg !== 'all');
     show('btn-clear-authors', activeFilters.author !== 'all');
     show('btn-clear-sources', activeFilters.source !== 'all');
     show('btn-clear-collab', activeFilters.collab !== 'all');
@@ -508,6 +539,13 @@ function createFilterTag(label, value, onRemove) {
 // Clique nos gráficos: aplica/remove filtro (toggle)
 function handleChartClick(chartType, datum) {
     if (!datum) return;
+    if (chartType === 'sdg') {
+        const n = datum.sdg !== undefined ? datum.sdg : (datum.datum && datum.datum.sdg);
+        if (n === undefined) return;
+        activeFilters.sdg = activeFilters.sdg === n ? 'all' : n;
+        updateDashboard();
+        return;
+    }
     if (chartType === 'author') {
         // Autor é identificado pelo índice (0 é válido), não pelo nome
         activeFilters.author = activeFilters.author === datum.index ? 'all' : datum.index;
@@ -1246,6 +1284,84 @@ function renderOAStatusBarChart() {
     vegaEmbed('#chart-oa-status', spec, { actions: false }).then(result => {
         result.view.addEventListener('click', (event, item) => {
             if (item && item.datum) handleChartClick('oa_status', item.datum);
+        });
+    });
+}
+
+// GRÁFICO: ODS (barras horizontais) — uma obra pode ter mais de um ODS, então
+// os percentuais (sobre as obras filtradas) somam mais de 100%.
+function renderSDGChart() {
+    const counts = {};
+    filteredData.forEach(item => {
+        item.sdgs.forEach(n => { counts[n] = (counts[n] || 0) + 1; });
+    });
+    const total = filteredData.length || 1;
+    const toDatum = n => ({
+        sdg: n,
+        label: sdgLabel(n),
+        value: counts[n] || 0,
+        pct: (counts[n] || 0) / total,
+        color: SDG_INFO[n].color
+    });
+    // Só ODS com mais de 1% das publicações filtradas, do maior para o menor;
+    // o ODS selecionado no filtro sempre aparece.
+    const chartData = [...Array(17).keys()].map(i => toDatum(i + 1))
+        .filter(d => d.pct > 0.01 || d.sdg === activeFilters.sdg)
+        .sort((a, b) => b.value - a.value || a.sdg - b.sdg);
+    const maxValue = Math.max(1, ...chartData.map(d => d.value));
+
+    const spec = {
+        "$schema": "https://vega.github.io/schema/vega-lite/v5.json",
+        "width": "container",
+        "height": { "step": 24 },
+        "data": { "values": chartData },
+        "encoding": {
+            "y": {
+                "field": "label", "type": "nominal", "title": null,
+                "sort": chartData.map(d => d.label),
+                "axis": { "labelColor": "#4a5568", "labelFontSize": 11, "labelLimit": 320, "ticks": false, "domain": false, "labelPadding": 8 }
+            },
+            "x": {
+                "field": "value", "type": "quantitative", "title": "Publicações",
+                "scale": { "domainMax": Math.ceil(maxValue * 1.15) },
+                "axis": {
+                    "grid": true, "gridDash": [4, 4], "gridColor": "#e8edf2", "format": ",d", "tickCount": 8,
+                    "labelColor": "#718096", "labelFontSize": 9, "titleColor": "#4a5568",
+                    "titleFontWeight": 600, "titleFontSize": 10, "domain": false, "ticks": false
+                }
+            },
+            "tooltip": [
+                { "field": "label", "type": "nominal", "title": "ODS" },
+                { "field": "value", "type": "quantitative", "title": "Publicações", "format": ",d" },
+                { "field": "pct", "type": "quantitative", "title": "% das publicações", "format": ".1%" }
+            ]
+        },
+        "layer": [
+            {
+                "mark": { "type": "bar", "cornerRadiusEnd": 3, "cursor": "pointer", "height": { "band": 0.72 } },
+                "encoding": {
+                    "color": { "field": "color", "type": "nominal", "scale": null, "legend": null },
+                    "opacity": activeFilters.sdg === 'all'
+                        ? { "value": 1 }
+                        : { "condition": { "test": `datum.sdg === ${activeFilters.sdg}`, "value": 1 }, "value": 0.3 }
+                }
+            },
+            {
+                "transform": [{ "calculate": "format(datum.value, ',d') + '  (' + format(datum.pct, '.1%') + ')'", "as": "txt" }],
+                "mark": { "type": "text", "align": "left", "dx": 5, "fontSize": 10, "color": "#4a5568" },
+                "encoding": { "text": { "field": "txt" } }
+            }
+        ],
+        "config": {
+            "background": "transparent",
+            "view": { "stroke": null },
+            "locale": { "number": { "decimal": ",", "thousands": ".", "grouping": [3] } }
+        }
+    };
+
+    vegaEmbed('#chart-sdg', spec, { actions: false }).then(result => {
+        result.view.addEventListener('click', (event, item) => {
+            if (item && item.datum) handleChartClick('sdg', item.datum);
         });
     });
 }

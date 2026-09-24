@@ -30,6 +30,8 @@ Campos por obra (ordem em "data"):
  12 ID do work no OpenAlex (ex.: W1234567890)
  13 DOI sem o prefixo https://doi.org/ ("" se não houver)
  14 citações (cited_by_count) — usado só para ordenar a listagem
+ 15 ODS            -> lista de números dos Objetivos de Desenvolvimento Sustentável
+                       (sustainable_development_goals do OpenAlex, score >= 0,4)
 """
 import csv
 import json
@@ -156,6 +158,8 @@ for q in QUERIES:
                 wid.rsplit("/", 1)[-1],
                 (w.get("doi") or "").replace("https://doi.org/", ""),
                 w.get("cited_by_count") or 0,
+                sorted({int(g["id"].rsplit("/", 1)[-1]) for g in (w.get("sustainable_development_goals") or [])
+                        if g.get("id")}),
             ])
     per_query[q] = n
 
