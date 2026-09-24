@@ -8,3 +8,5 @@ __pycache__/
 crossref_author_metadata.json
 *.zip
 *.rar
+openalex_raw/
+.DS_Store
