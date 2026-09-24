@@ -3,22 +3,37 @@
 
 // Tradução de idiomas e tipos de documento
 const LANGUAGE_MAP = {
-    'en': 'Inglês (en)',
-    'pt': 'Português (pt)',
-    'es': 'Espanhol (es)',
-    'fr': 'Francês (fr)',
-    'de': 'Alemão (de)',
-    'it': 'Italiano (it)',
-    'hr': 'Croata (hr)',
-    'he': 'Hebraico (he)',
-    'ca': 'Catalão (ca)',
-    'lv': 'Letão (lv)',
-    'fi': 'Finlandês (fi)',
-    'gl': 'Galego (gl)',
-    'hi': 'Hindi (hi)',
-    'sv': 'Sueco (sv)',
-    'unknown': 'Desconhecido'
+    'en': 'Inglês',
+    'pt': 'Português',
+    'es': 'Espanhol',
+    'fr': 'Francês',
+    'de': 'Alemão',
+    'it': 'Italiano',
+    'ru': 'Russo',
+    'hu': 'Húngaro',
+    'hr': 'Croata',
+    'he': 'Hebraico',
+    'ca': 'Catalão',
+    'lv': 'Letão',
+    'fi': 'Finlandês',
+    'gl': 'Galego',
+    'sl': 'Esloveno',
+    'hi': 'Hindi',
+    'sv': 'Sueco',
+    'unknown': 'Não identificado'
 };
+
+// Nome do idioma por extenso; códigos fora da lista usam o nome do navegador (pt-BR)
+const LANGUAGE_DISPLAY = (typeof Intl !== 'undefined' && Intl.DisplayNames)
+    ? new Intl.DisplayNames(['pt-BR'], { type: 'language' }) : null;
+function languageName(code) {
+    if (LANGUAGE_MAP[code]) return LANGUAGE_MAP[code];
+    try {
+        const n = LANGUAGE_DISPLAY && LANGUAGE_DISPLAY.of(code);
+        if (n && n !== code) return n.charAt(0).toUpperCase() + n.slice(1);
+    } catch (e) { /* código inválido */ }
+    return code.toUpperCase();
+}
 
 const TYPE_MAP = {
     'article': 'Artigo',
@@ -65,7 +80,6 @@ function defaultFilters() {
         yearMax: YEAR_MAX,
         language: 'all',
         type: 'all',
-        searchSource: '',
         area: 'all',
         subarea: 'all',
         institution: 'all',
@@ -83,6 +97,7 @@ let activeFilters = {};
 
 // Estado global
 let currentTemporalSort = 'publications'; // 'publications' ou 'year'
+let showTemporalValues = false;             // checkbox "Mostrar valores"
 let tableInstSearchQuery = '';
 let tableInstSortColumn = 'count'; // 'rank', 'institution', 'count'
 let tableInstSortDirection = 'desc';
@@ -102,8 +117,6 @@ const maxYearSlider = document.getElementById('filter-year-max');
 const yearRangeDisplay = document.getElementById('year-range-display');
 const selectLanguage = document.getElementById('filter-language');
 const selectType = document.getElementById('filter-type');
-const searchSourceInput = document.getElementById('filter-search-source');
-const clearSearchBtn = document.getElementById('clear-search-btn');
 const resetFiltersBtn = document.getElementById('btn-reset-filters');
 
 const sortPublicationsBtn = document.getElementById('sort-by-publications');
@@ -200,10 +213,10 @@ function populateFilterOptions() {
         if (item.type) types.add(item.type);
     });
 
-    Array.from(languages).sort().forEach(lang => {
+    Array.from(languages).sort((a, b) => languageName(a).localeCompare(languageName(b), 'pt-BR')).forEach(lang => {
         const option = document.createElement('option');
         option.value = lang;
-        option.textContent = LANGUAGE_MAP[lang] || lang.toUpperCase();
+        option.textContent = languageName(lang);
         selectLanguage.appendChild(option);
     });
 
@@ -242,16 +255,6 @@ function setupEventListeners() {
     selectLanguage.addEventListener('change', updateDashboard);
     selectType.addEventListener('change', updateDashboard);
 
-    searchSourceInput.addEventListener('input', () => {
-        clearSearchBtn.style.display = searchSourceInput.value.trim() !== '' ? 'block' : 'none';
-        updateDashboard();
-    });
-    clearSearchBtn.addEventListener('click', () => {
-        searchSourceInput.value = '';
-        clearSearchBtn.style.display = 'none';
-        updateDashboard();
-    });
-
     resetFiltersBtn.addEventListener('click', resetFilters);
     document.getElementById('btn-clear-all-filters').addEventListener('click', resetFilters);
 
@@ -270,6 +273,11 @@ function setupEventListeners() {
             sortPublicationsBtn.classList.remove('active');
             renderTemporalChart();
         }
+    });
+
+    document.getElementById('toggle-temporal-values').addEventListener('change', e => {
+        showTemporalValues = e.target.checked;
+        renderTemporalChart();
     });
 
     const applyInstSearch = () => {
@@ -345,9 +353,6 @@ function resetFilters() {
     resetYearRange();
     selectLanguage.value = 'all';
     selectType.value = 'all';
-    searchSourceInput.value = '';
-    clearSearchBtn.style.display = 'none';
-
     tableInstFilterInput.value = '';
     tableInstSearchQuery = '';
     tableInstSortColumn = 'count';
@@ -380,7 +385,6 @@ function syncFiltersFromUI() {
     activeFilters.yearMax = parseInt(maxYearSlider.value);
     activeFilters.language = selectLanguage.value;
     activeFilters.type = selectType.value;
-    activeFilters.searchSource = searchSourceInput.value.trim();
 }
 
 let filteredData = [];
@@ -388,13 +392,11 @@ let filteredData = [];
 function updateDashboard() {
     syncFiltersFromUI();
     const f = activeFilters;
-    const q = f.searchSource.toLowerCase();
 
     filteredData = dashboardData.filter(item => {
         if (item.year < f.yearMin || item.year > f.yearMax) return false;
         if (f.language !== 'all' && item.language !== f.language) return false;
         if (f.type !== 'all' && item.type !== f.type) return false;
-        if (q !== '' && !item.source.toLowerCase().includes(q)) return false;
         if (f.area !== 'all' && item.area !== f.area) return false;
         if (f.subarea !== 'all' && item.subarea !== f.subarea) return false;
         if (f.institution !== 'all' && !item.institutions.includes(f.institution)) return false;
@@ -450,17 +452,10 @@ function renderActiveFiltersBar() {
         tag("Ano", `${f.yearMin} - ${f.yearMax}`, () => { resetYearRange(); updateDashboard(); });
     }
     if (f.language !== 'all') {
-        tag("Idioma", LANGUAGE_MAP[f.language] || f.language, () => { selectLanguage.value = 'all'; updateDashboard(); });
+        tag("Idioma", languageName(f.language), () => { selectLanguage.value = 'all'; updateDashboard(); });
     }
     if (f.type !== 'all') {
         tag("Tipo", TYPE_MAP[f.type] || f.type, () => { selectType.value = 'all'; updateDashboard(); });
-    }
-    if (f.searchSource !== '') {
-        tag("Busca Fonte", f.searchSource, () => {
-            searchSourceInput.value = '';
-            clearSearchBtn.style.display = 'none';
-            updateDashboard();
-        });
     }
     if (f.area !== 'all') tag("Área", f.area, () => { activeFilters.area = 'all'; updateDashboard(); });
     if (f.subarea !== 'all') tag("Subárea", f.subarea, () => { activeFilters.subarea = 'all'; updateDashboard(); });
@@ -535,7 +530,11 @@ function handleChartClick(chartType, datum) {
             updateYearRangeDisplay();
         }
     } else if (chartType === 'language') {
-        selectLanguage.value = activeFilters.language === keyVal ? 'all' : keyVal;
+        // A rosca mostra o nome por extenso; o filtro usa o código do idioma
+        const code = Object.keys(LANGUAGE_MAP).find(k => LANGUAGE_MAP[k] === keyVal)
+            || Array.from(selectLanguage.options).map(o => o.value).find(v => languageName(v) === keyVal)
+            || keyVal;
+        selectLanguage.value = activeFilters.language === code ? 'all' : code;
     } else if (chartType === 'area') {
         toggle('area');
     } else if (chartType === 'subarea') {
@@ -709,7 +708,7 @@ function renderHTMLDonut(containerId, data, chartType) {
     data.forEach((d, idx) => {
         const color = d.color || DONUT_COLORS[idx % DONUT_COLORS.length];
         const pct = (d.percentage * 100);
-        const pctFmt = pct.toLocaleString('pt-BR', {minimumFractionDigits: 2, maximumFractionDigits: 2});
+        const pctFmt = (pct > 0 && pct < 0.005) ? '<0,01' : pct.toLocaleString('pt-BR', {minimumFractionDigits: 2, maximumFractionDigits: 2});
 
         const row = document.createElement('div');
         row.style.cssText = 'display:flex;align-items:center;gap:8px;cursor:pointer;padding:3px 6px;border-radius:5px;transition:background 0.12s;';
@@ -1065,6 +1064,25 @@ function renderTemporalChart() {
         }
     };
 
+    // Números no padrão brasileiro (3.000) nos eixos, rótulos e tooltip
+    spec.config.locale = { "number": { "decimal": ",", "thousands": ".", "grouping": [3] } };
+
+    if (showTemporalValues) {
+        // Barras + rótulo com o total acima de cada barra
+        const barMark = spec.mark;
+        delete spec.mark;
+        spec.layer = [
+            { "mark": barMark },
+            {
+                "mark": { "type": "text", "dy": -7, "fontSize": 10, "fontWeight": 600, "color": "#4a5568" },
+                "encoding": { "text": { "field": "total_count", "type": "quantitative", "format": ",d" } }
+            }
+        ];
+        // Folga no topo para o rótulo da barra mais alta não ser cortado
+        const maxCount = Math.max(0, ...chartData.map(d => d.total_count));
+        spec.encoding.y.scale = { "domainMax": Math.ceil(maxCount * 1.12) };
+    }
+
     vegaEmbed('#chart-temporal', spec, { actions: false }).then(result => {
         result.view.addEventListener('click', (event, item) => {
             if (item && item.datum) handleChartClick('temporal', item.datum);
@@ -1081,7 +1099,7 @@ function renderLanguageChart() {
     });
     const total = filteredData.length || 1;
     const data = Object.entries(counts)
-        .map(([key, value]) => ({ key, value, percentage: value / total }))
+        .map(([code, value]) => ({ key: languageName(code), code, value, percentage: value / total }))
         .sort((a, b) => b.value - a.value);
     renderHTMLDonut('#chart-language', data, 'language');
 }

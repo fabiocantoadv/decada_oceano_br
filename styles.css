@@ -1638,3 +1638,54 @@ body {
     opacity: 0.35;
     cursor: default;
 }
+
+/* Checkbox "Mostrar valores" nos gráficos */
+.show-values-toggle {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    font-size: 12px;
+    font-weight: 500;
+    color: var(--text-muted);
+    cursor: pointer;
+    user-select: none;
+    margin-right: 8px;
+}
+.show-values-toggle input {
+    accent-color: #55b399;
+    cursor: pointer;
+    margin: 0;
+}
+
+/* Linha superior: card do total de publicações + filtros */
+.top-row {
+    display: grid;
+    grid-template-columns: minmax(260px, 320px) 1fr;
+    gap: 24px;
+    align-items: stretch;
+}
+.top-row .kpi-grid {
+    grid-template-columns: 1fr;
+}
+.top-row .kpi-card {
+    height: 100%;
+    box-sizing: border-box;
+}
+.top-row .filters-card {
+    padding: 18px 24px;
+}
+.top-row .filters-header {
+    margin-bottom: 14px;
+    padding-bottom: 10px;
+}
+.top-row .filters-grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+@media (max-width: 992px) {
+    .top-row {
+        grid-template-columns: 1fr;
+    }
+    .top-row .filters-grid {
+        grid-template-columns: 1fr;
+    }
+}

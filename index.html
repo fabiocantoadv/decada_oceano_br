@@ -67,13 +67,11 @@
                     </div>
                 </div>
             </div>
-            <div class="theme-toggle-area">
-                <span class="data-status"><span class="status-dot"></span> Dados prontos</span>
-            </div>
         </header>
 
-        <!-- KPI Cards Grid -->
-        <section class="kpi-grid" style="grid-template-columns: minmax(260px, 340px);">
+        <!-- Total de publicações e filtros lado a lado -->
+        <div class="top-row">
+        <section class="kpi-grid">
             <div class="kpi-card">
                 <div class="kpi-icon-wrapper blue">
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -126,17 +124,9 @@
                         <!-- Will be populated dynamically -->
                     </select>
                 </div>
-
-                <!-- Search filter -->
-                <div class="filter-group">
-                    <label for="filter-search-source">Buscar Periódico / Revista</label>
-                    <div class="search-input-wrapper">
-                        <input type="text" id="filter-search-source" placeholder="Ex: Marine Pollution Bulletin...">
-                        <button id="clear-search-btn" class="clear-btn">&times;</button>
-                    </div>
-                </div>
             </div>
         </section>
+        </div>
 
         <!-- Active Filters Display Bar -->
         <div id="active-filters-bar" class="active-filters-bar" style="display: none;">
@@ -156,6 +146,9 @@
                     </div>
                     <div class="chart-actions">
                         <button class="chart-clear-btn" id="btn-clear-temporal" style="display: none; margin-right: 12px;">Limpar Filtro</button>
+                        <label class="show-values-toggle">
+                            <input type="checkbox" id="toggle-temporal-values"> Mostrar valores
+                        </label>
                         <span class="sort-label">Ordenar:</span>
                         <div class="toggle-group">
                             <button id="sort-by-publications" class="toggle-btn active">Publicações</button>
@@ -197,7 +190,7 @@
                 <div class="chart-header">
                     <div class="chart-title-area">
                         <h2>Colaboração Científica</h2>
-                        <span class="chart-subtitle">Somente autores brasileiros (1 país) vs colaboração internacional (2 ou mais países)</span>
+                        <span class="chart-subtitle">Somente autores brasileiros vs colaboração internacional</span>
                     </div>
                     <div class="chart-actions">
                         <button class="chart-clear-btn" id="btn-clear-collab" style="display: none;">Limpar Filtro</button>
@@ -376,7 +369,7 @@
                 <div class="chart-header">
                     <div class="chart-title-area">
                         <h2>Modelo de Acesso</h2>
-                        <span class="chart-subtitle">Publicações por modelo de acesso (OpenAlex: oa_status)</span>
+                        <span class="chart-subtitle">Publicações por modelo de acesso</span>
                     </div>
                     <div class="chart-actions">
                         <button class="chart-clear-btn" id="btn-clear-oa-status" style="display: none;">Limpar Filtro</button>
