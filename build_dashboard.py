@@ -12,7 +12,7 @@ Campos por obra (ordem em "data"):
   1 idioma          -> dicts.languages
   2 tipo            -> dicts.types
   3 área            -> dicts.areas         (primary_topic.field)
-  4 subárea         -> dicts.subareas      (primary_topic)
+  4 subárea         -> dicts.subareas      (primary_topic.subfield)
   5 fonte           -> dicts.sources       (primary_location.source)
   6 instituições    -> lista de índices em dicts.institutions
                        (todas as instituições distintas dos autores da obra)
@@ -149,7 +149,7 @@ for q in QUERIES:
                 idx("languages", (w.get("language") or "unknown").lower()),
                 idx("types", w.get("type") or "unknown"),
                 idx("areas", get(w, "primary_topic", "field", "display_name") or OTHER),
-                idx("subareas", get(w, "primary_topic", "display_name") or OTHER),
+                idx("subareas", get(w, "primary_topic", "subfield", "display_name") or OTHER),
                 idx("sources", get(w, "primary_location", "source", "display_name") or UNKNOWN_SOURCE),
                 [idx("institutions", i) for i in insts],
                 [idx("topics", t) for t in topics],

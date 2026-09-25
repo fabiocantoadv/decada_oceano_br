@@ -1159,7 +1159,7 @@ function renderAreasChart() {
     renderHTMLTreemap('#chart-areas', countBy('area'), 'area');
 }
 
-// GRÁFICO: Subáreas (treemap) — tópico principal no OpenAlex, 50 maiores
+// GRÁFICO: Subáreas (treemap) — subárea (subfield) do tópico principal no OpenAlex, 50 maiores
 function renderSubareasChart() {
     renderHTMLTreemap('#chart-subareas', countBy('subarea').slice(0, 50), 'subarea');
 }
