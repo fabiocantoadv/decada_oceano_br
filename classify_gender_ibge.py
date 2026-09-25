@@ -155,11 +155,13 @@ def main():
                     works.append({"work_id": wid, "doi": (w.get("doi") or "").replace("https://doi.org/", ""),
                                   "ano": w.get("publication_year"), "primeiro_autor": name,
                                   "author_id": aid.rsplit("/", 1)[-1], "genero_primeiro_autor": authors[aid]["genero"],
-                                  "primeiro_autor_no_brasil": "BR" in ctry})
+                                  "primeiro_autor_no_brasil": "BR" in ctry,
+                                  "paises_primeiro_autor": ";".join(sorted(set(ctry)))})
                 else:
                     works.append({"work_id": wid, "doi": (w.get("doi") or "").replace("https://doi.org/", ""),
                                   "ano": w.get("publication_year"), "primeiro_autor": "", "author_id": "",
-                                  "genero_primeiro_autor": "INDEFINIDO", "primeiro_autor_no_brasil": False})
+                                  "genero_primeiro_autor": "INDEFINIDO", "primeiro_autor_no_brasil": False,
+                                  "paises_primeiro_autor": ""})
 
     with open(os.path.join(OUT_DIR, "autores_genero_ibge.csv"), "w", newline="", encoding="utf-8") as f:
         cols = ["author_id", "nome", "primeiro_nome", "genero", "proporcao", "prop_feminina_ibge",

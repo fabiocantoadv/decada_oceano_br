@@ -1,0 +1,37 @@
+{
+  "fonte": "WGND 2.0 (WIPO), wgnd_2_0_name-gender-code.csv; fallback: wgnd_2_0_name-gender_nocode.csv",
+  "limiar": 0.9,
+  "autores_estrangeiros": 26182,
+  "ibge": {
+    "MASCULINO": 11305,
+    "FEMININO": 6902,
+    "INDEFINIDO": 7975
+  },
+  "wgnd_por_pais": {
+    "MASCULINO": 10676,
+    "FEMININO": 6069,
+    "INDEFINIDO": 9437
+  },
+  "wgnd_por_pais_motivos": {
+    "WGND": 16745,
+    "nome ambíguo na WGND": 1489,
+    "nome ausente na WGND para o país": 6523,
+    "nome abreviado": 1425
+  },
+  "wgnd_com_fallback": {
+    "MASCULINO": 13888,
+    "FEMININO": 8109,
+    "INDEFINIDO": 4185
+  },
+  "ibge_x_wgnd": {
+    "FEMININO->FEMININO": 5051,
+    "FEMININO->INDEFINIDO": 1744,
+    "FEMININO->MASCULINO": 107,
+    "INDEFINIDO->FEMININO": 952,
+    "INDEFINIDO->INDEFINIDO": 5009,
+    "INDEFINIDO->MASCULINO": 2014,
+    "MASCULINO->FEMININO": 66,
+    "MASCULINO->INDEFINIDO": 2684,
+    "MASCULINO->MASCULINO": 8555
+  }
+}
