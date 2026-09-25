@@ -16,10 +16,10 @@
     <script src="lib/vega-embed.min.js"></script>
     
     <!-- Stylesheet -->
-    <link rel="stylesheet" href="styles.css?v=979b41bb5b">
+    <link rel="stylesheet" href="styles.css?v=1055497704">
     
     <!-- Pre-aggregated data loaded from local JS to bypass CORS -->
-    <script src="dashboard_data.js?v=9f498598f2"></script>
+    <script src="dashboard_data.js?v=4d7b817cf4"></script>
 </head>
 <body>
     <script>
@@ -433,7 +433,73 @@
                 </div>
                 <div id="chart-topics" class="chart-container treemap-container"></div>
             </div>
-            <!-- Linha 10: Listagem das Publicações -->
+            <!-- Linha 10: Gênero dos autores e do primeiro autor -->
+            <div class="chart-card">
+                <div class="chart-header">
+                    <div class="chart-title-area">
+                        <h2>Gênero dos Autores</h2>
+                        <span class="chart-subtitle">Autores das publicações, pelo gênero previsto a partir do primeiro nome (IBGE)</span>
+                    </div>
+                    <div class="chart-actions"></div>
+                </div>
+                <div id="chart-author-gender" class="chart-container donut-container"></div>
+            </div>
+
+            <div class="chart-card">
+                <div class="chart-header">
+                    <div class="chart-title-area">
+                        <h2>Gênero do Primeiro Autor</h2>
+                        <span class="chart-subtitle">Publicações pelo gênero previsto do primeiro autor (IBGE)</span>
+                    </div>
+                    <div class="chart-actions">
+                        <button class="chart-clear-btn" id="btn-clear-first-gender" style="display: none;">Limpar Filtro</button>
+                    </div>
+                </div>
+                <div id="chart-first-gender" class="chart-container donut-container"></div>
+            </div>
+
+            <!-- Linha 11: Conferência — primeiros nomes por gênero -->
+            <div class="chart-card span-all">
+                <div class="chart-header">
+                    <div class="chart-title-area">
+                        <h2>Primeiros Nomes por Gênero</h2>
+                        <span class="chart-subtitle">Conferência da classificação: autores das publicações filtradas agrupados pelo primeiro nome</span>
+                    </div>
+                    <div class="chart-actions"></div>
+                </div>
+                <div class="table-card-content">
+                    <div class="fn-toolbar">
+                        <div class="table-filter-bar">
+                            <input type="text" id="table-fn-filter-input" placeholder="Buscar nome...">
+                        </div>
+                        <div class="toggle-group" id="fn-gender-toggle">
+                            <button class="toggle-btn active" data-gender="all">Todos</button>
+                            <button class="toggle-btn" data-gender="F">Feminino</button>
+                            <button class="toggle-btn" data-gender="M">Masculino</button>
+                            <button class="toggle-btn" data-gender="I">Indefinido</button>
+                        </div>
+                    </div>
+                    <span id="fn-table-info" class="publications-count-info"></span>
+                    <div class="table-scroll-container">
+                        <table class="data-table fn-table">
+                            <thead>
+                                <tr>
+                                    <th>#</th>
+                                    <th id="th-fn-name" class="sortable">Primeiro nome<span class="sort-indicator"></span></th>
+                                    <th id="th-fn-gender" class="sortable">Gênero<span class="sort-indicator"></span></th>
+                                    <th id="th-fn-count" class="sortable">Autores<span class="sort-indicator"></span></th>
+                                    <th id="th-fn-pf" class="sortable">% feminino no IBGE<span class="sort-indicator"></span></th>
+                                    <th id="th-fn-freq" class="sortable">Pessoas no IBGE<span class="sort-indicator"></span></th>
+                                    <th>Observação</th>
+                                </tr>
+                            </thead>
+                            <tbody id="table-body-first-names"></tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Linha 12: Listagem das Publicações -->
             <div class="chart-card span-all">
                 <div class="chart-header">
                     <div class="chart-title-area">
@@ -473,6 +539,6 @@
     </div>
 
     <!-- Main Logic Script -->
-    <script src="app.js?v=1bdcd60a66"></script>
+    <script src="app.js?v=7a86ad378b"></script>
 </body>
 </html>

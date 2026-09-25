@@ -561,7 +561,8 @@ body {
 #table-inst-filter-input,
 #table-country-filter-input,
 #table-source-filter-input,
-#table-author-filter-input {
+#table-author-filter-input,
+#table-fn-filter-input {
     flex-grow: 1;
     padding: 10px 14px;
     font-size: 14px;
@@ -579,7 +580,8 @@ body {
 #table-inst-filter-input:focus,
 #table-country-filter-input:focus,
 #table-source-filter-input:focus,
-#table-author-filter-input:focus {
+#table-author-filter-input:focus,
+#table-fn-filter-input:focus {
     border-color: #0069c0;
     box-shadow: 0 0 0 2px rgba(0, 105, 192, 0.15);
 }
@@ -1790,4 +1792,40 @@ body.modal-open {
     .chart-modal-overlay {
         padding: 8px;
     }
+}
+
+/* Tabela de conferência: primeiros nomes por gênero */
+.fn-toolbar {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+}
+.fn-toolbar .table-filter-bar {
+    flex: 0 1 360px;
+}
+.fn-table th:nth-child(4), .fn-table th:nth-child(5), .fn-table th:nth-child(6) {
+    text-align: right;
+}
+.fn-table td.cell-fn-name {
+    font-weight: 600;
+    letter-spacing: 0.02em;
+}
+.fn-table td.cell-fn-note {
+    color: var(--text-muted);
+    font-size: 12px;
+}
+.gender-dot {
+    display: inline-block;
+    width: 9px;
+    height: 9px;
+    border-radius: 50%;
+    margin-right: 7px;
+    vertical-align: 0;
+}
+.fn-toolbar #table-fn-filter-input {
+    width: 100%;
+    border-right: 1px solid #cbd5e1;
+    border-radius: var(--radius-md);
 }

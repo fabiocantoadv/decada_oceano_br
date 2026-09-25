@@ -114,7 +114,8 @@ function defaultFilters() {
         collab: 'all', // 'nacional' | 'internacional'
         source: 'all', // fonte exata (clique na tabela); a busca do topo é por trecho
         author: 'all', // índice do autor em dicts.authors
-        sdg: 'all'     // número do ODS (1–17)
+        sdg: 'all',    // número do ODS (1–17)
+        firstGender: 'all' // gênero do 1º autor: 'F' | 'M' | 'I'
     };
 }
 
@@ -172,6 +173,7 @@ const kpiPublications = document.getElementById('kpi-total-publications');
 let dashboardData = [];
 let AUTHOR_NAMES = [];
 let AUTHOR_ORCIDS = [];
+let AUTHOR_GENDERS = []; // F, M ou I por autor (classificação pelo primeiro nome, IBGE)
 let AUTHOR_DUP_NAMES = new Set(); // nomes usados por mais de um autor (IDs diferentes)
 
 function decompressData() {
@@ -182,6 +184,7 @@ function decompressData() {
     const d = dashboardDataRaw.dicts;
     AUTHOR_NAMES = d.authors;
     AUTHOR_ORCIDS = d.author_orcids;
+    AUTHOR_GENDERS = d.author_genders || [];
     const seenNames = new Set();
     AUTHOR_NAMES.forEach(n => { if (seenNames.has(n)) AUTHOR_DUP_NAMES.add(n); else seenNames.add(n); });
     dashboardData = dashboardDataRaw.data.map(item => ({
@@ -204,6 +207,7 @@ function decompressData() {
         doi: item[13],
         citations: item[14],
         sdgs: item[15],
+        firstGender: item[16] || 'I',
         is_oa: OA_OPEN_STATUSES.includes(d.oa_statuses[item[9]]),
         count: 1
     }));
@@ -224,6 +228,7 @@ function init() {
 
     populateFilterOptions();
     setupEventListeners();
+    setupFirstNamesTable();
     setupExpandButtons();
     updateTableInstSortIndicators();
     updateTableCountrySortIndicators();
@@ -365,6 +370,7 @@ function setupEventListeners() {
     document.getElementById('btn-clear-oa-pie').addEventListener('click', () => { activeFilters.openAccess = 'all'; updateDashboard(); });
     document.getElementById('btn-clear-oa-status').addEventListener('click', () => { activeFilters.oaStatus = 'all'; updateDashboard(); });
     document.getElementById('btn-clear-collab').addEventListener('click', () => { activeFilters.collab = 'all'; updateDashboard(); });
+    document.getElementById('btn-clear-first-gender').addEventListener('click', () => { activeFilters.firstGender = 'all'; updateDashboard(); });
     document.getElementById('btn-clear-sdg').addEventListener('click', () => { activeFilters.sdg = 'all'; updateDashboard(); });
     document.getElementById('btn-clear-authors').addEventListener('click', () => { activeFilters.author = 'all'; updateDashboard(); });
     document.getElementById('btn-clear-sources').addEventListener('click', () => { activeFilters.source = 'all'; updateDashboard(); });
@@ -436,6 +442,7 @@ function updateDashboard() {
         if (f.source !== 'all' && item.source !== f.source) return false;
         if (f.author !== 'all' && !item.authors.includes(f.author)) return false;
         if (f.sdg !== 'all' && !item.sdgs.includes(f.sdg)) return false;
+        if (f.firstGender !== 'all' && item.firstGender !== f.firstGender) return false;
         return true;
     });
 
@@ -457,6 +464,9 @@ function updateDashboard() {
     renderOAStatusBarChart();
     renderCollabChart();
     renderSDGChart();
+    renderAuthorGenderChart();
+    renderFirstAuthorGenderChart();
+    renderFirstNamesTable();
     renderPublicationsTable();
 }
 
@@ -493,6 +503,7 @@ function renderActiveFiltersBar() {
     if (f.country !== 'all') tag("País", f.country, () => { activeFilters.country = 'all'; updateDashboard(); });
     if (f.openAccess !== 'all') tag("Acesso", f.openAccess === 'aberto' ? 'Aberto' : 'Fechado', () => { activeFilters.openAccess = 'all'; updateDashboard(); });
     if (f.oaStatus !== 'all') tag("Modelo de acesso", OA_STATUS_MAP[f.oaStatus] || f.oaStatus, () => { activeFilters.oaStatus = 'all'; updateDashboard(); });
+    if (f.firstGender !== 'all') tag("Gênero do 1º autor", GENDER_LABELS[f.firstGender], () => { activeFilters.firstGender = 'all'; updateDashboard(); });
     if (f.sdg !== 'all') tag("ODS", sdgLabel(f.sdg), () => { activeFilters.sdg = 'all'; updateDashboard(); });
     if (f.author !== 'all') tag("Autor", authorLabel(f.author), () => { activeFilters.author = 'all'; updateDashboard(); });
     if (f.source !== 'all') tag("Fonte", f.source, () => { activeFilters.source = 'all'; updateDashboard(); });
@@ -512,6 +523,7 @@ function updateChartClearButtonsVisibility() {
     show('btn-clear-countries', activeFilters.country !== 'all');
     show('btn-clear-oa-pie', activeFilters.openAccess !== 'all');
     show('btn-clear-oa-status', activeFilters.oaStatus !== 'all');
+    show('btn-clear-first-gender', activeFilters.firstGender !== 'all');
     show('btn-clear-sdg', activeFilters.sdg !== 'all');
     show('btn-clear-authors', activeFilters.author !== 'all');
     show('btn-clear-sources', activeFilters.source !== 'all');
@@ -540,6 +552,12 @@ function createFilterTag(label, value, onRemove) {
 // Clique nos gráficos: aplica/remove filtro (toggle)
 function handleChartClick(chartType, datum) {
     if (!datum) return;
+    if (chartType === 'first_gender') {
+        const g = Object.keys(GENDER_LABELS).find(k => GENDER_LABELS[k] === datum.key);
+        if (g) activeFilters.firstGender = activeFilters.firstGender === g ? 'all' : g;
+        updateDashboard();
+        return;
+    }
     if (chartType === 'sdg') {
         const n = datum.sdg !== undefined ? datum.sdg : (datum.datum && datum.datum.sdg);
         if (n === undefined) return;
@@ -614,7 +632,8 @@ const DONUT_COLORS = [
     '#7B5EA7', '#3D87A4', '#CD7F32', '#B9A888', '#AA6556',
 ];
 
-function renderHTMLDonut(containerId, data, chartType) {
+function renderHTMLDonut(containerId, data, chartType, centerLabel = 'registros') {
+    const clickable = !!chartType;
     const container = document.querySelector(containerId);
     if (!container) return;
     container.innerHTML = '';
@@ -685,7 +704,7 @@ function renderHTMLDonut(containerId, data, chartType) {
 
         path.setAttribute('d', dAttr);
         path.setAttribute('fill', color);
-        path.style.cssText = 'cursor:pointer;transition:opacity 0.15s ease,transform 0.15s ease;transform-origin:' + cx + 'px ' + cy + 'px;';
+        path.style.cssText = (clickable ? 'cursor:pointer;' : '') + 'transition:opacity 0.15s ease,transform 0.15s ease;transform-origin:' + cx + 'px ' + cy + 'px;';
         path.setAttribute('data-key', d.key);
 
         const pctStr = (d.percentage * 100).toLocaleString('pt-BR', {minimumFractionDigits: 2, maximumFractionDigits: 2});
@@ -696,7 +715,7 @@ function renderHTMLDonut(containerId, data, chartType) {
         path.addEventListener('mouseleave', () => { path.style.opacity = '';     path.style.transform = ''; });
 
         // Click → cross-filter
-        path.addEventListener('click', () => {
+        if (clickable) path.addEventListener('click', () => {
             handleChartClick(chartType, { key: d.key, value: d.value, percentage: d.percentage });
         });
 
@@ -734,7 +753,7 @@ function renderHTMLDonut(containerId, data, chartType) {
     labelSub.setAttribute('fill', '#a0aec0');
     labelSub.setAttribute('font-family', 'Inter, sans-serif');
     labelSub.setAttribute('font-size', String(10 * k));
-    labelSub.textContent = 'registros';
+    labelSub.textContent = centerLabel;
     centerG.appendChild(labelSub);
 
     svg.appendChild(centerG);
@@ -752,12 +771,12 @@ function renderHTMLDonut(containerId, data, chartType) {
         const pctFmt = (pct > 0 && pct < 0.005) ? '<0,01' : pct.toLocaleString('pt-BR', {minimumFractionDigits: 2, maximumFractionDigits: 2});
 
         const row = document.createElement('div');
-        row.style.cssText = 'display:flex;align-items:center;gap:8px;cursor:pointer;padding:3px 6px;border-radius:5px;transition:background 0.12s;';
-        row.title = `${d.key}: ${pctFmt}% (${d.value.toLocaleString('pt-BR')} registros)`;
+        row.style.cssText = 'display:flex;align-items:center;gap:8px;' + (clickable ? 'cursor:pointer;' : '') + 'padding:3px 6px;border-radius:5px;transition:background 0.12s;';
+        row.title = `${d.key}: ${pctFmt}% (${d.value.toLocaleString('pt-BR')} ${centerLabel})`;
 
         row.addEventListener('mouseenter', () => { row.style.background = '#f7fafc'; });
         row.addEventListener('mouseleave', () => { row.style.background = ''; });
-        row.addEventListener('click', () => {
+        if (clickable) row.addEventListener('click', () => {
             handleChartClick(chartType, { key: d.key, value: d.value, percentage: d.percentage });
         });
 
@@ -1374,6 +1393,142 @@ function renderSDGChart() {
     });
 }
 
+// GRÁFICO: Gênero dos autores (rosca) — autores distintos (ID do OpenAlex) das
+// publicações filtradas, pelo gênero previsto a partir do primeiro nome (IBGE).
+// Só visualização: não filtra o painel.
+const GENDER_LABELS = { F: 'Feminino', M: 'Masculino', I: 'Indefinido' };
+const GENDER_COLORS = { F: '#9170B8', M: '#54B399', I: '#A0AEC0' };
+
+function renderAuthorGenderChart() {
+    const seenAuthors = new Set();
+    filteredData.forEach(item => item.authors.forEach(a => seenAuthors.add(a)));
+    const counts = { F: 0, M: 0, I: 0 };
+    seenAuthors.forEach(a => { counts[AUTHOR_GENDERS[a] || 'I']++; });
+    const total = seenAuthors.size || 1;
+    const data = ['F', 'M', 'I']
+        .map(g => ({ key: GENDER_LABELS[g], value: counts[g], color: GENDER_COLORS[g], percentage: counts[g] / total }))
+        .filter(d => d.value > 0)
+        .sort((a, b) => b.value - a.value);
+    renderHTMLDonut('#chart-author-gender', data, null, 'autores');
+}
+
+// GRÁFICO: Gênero do primeiro autor (rosca) — uma obra por fatia, pelo gênero
+// previsto do 1º autor; clicar filtra o painel.
+function renderFirstAuthorGenderChart() {
+    const counts = { F: 0, M: 0, I: 0 };
+    filteredData.forEach(item => { counts[item.firstGender] = (counts[item.firstGender] || 0) + 1; });
+    const total = filteredData.length || 1;
+    const data = ['F', 'M', 'I']
+        .map(g => ({ key: GENDER_LABELS[g], value: counts[g], color: GENDER_COLORS[g], percentage: counts[g] / total }))
+        .filter(d => d.value > 0)
+        .sort((a, b) => b.value - a.value);
+    renderHTMLDonut('#chart-first-gender', data, 'first_gender', 'publicações');
+}
+
+// TABELA: Primeiros nomes por gênero (conferência da classificação) — autores
+// distintos das publicações filtradas, agrupados pelo primeiro nome usado na
+// classificação; mostra a proporção feminina e a frequência do nome no IBGE.
+let fnTableSearch = '';
+let fnTableGender = 'all';        // 'all' | 'F' | 'M' | 'I'
+let fnTableSortColumn = 'count';  // 'name' | 'gender' | 'count' | 'pf' | 'freq'
+let fnTableSortDirection = 'desc';
+const FN_TABLE_LIMIT = 500;
+
+function setupFirstNamesTable() {
+    const input = document.getElementById('table-fn-filter-input');
+    input.addEventListener('input', () => { fnTableSearch = normalizeText(input.value.trim()); renderFirstNamesTable(); });
+    document.querySelectorAll('#fn-gender-toggle .toggle-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+            fnTableGender = btn.dataset.gender;
+            document.querySelectorAll('#fn-gender-toggle .toggle-btn').forEach(b => b.classList.toggle('active', b === btn));
+            renderFirstNamesTable();
+        });
+    });
+    ['name', 'gender', 'count', 'pf', 'freq'].forEach(col => {
+        document.getElementById(`th-fn-${col}`).addEventListener('click', () => {
+            if (fnTableSortColumn === col) fnTableSortDirection = fnTableSortDirection === 'asc' ? 'desc' : 'asc';
+            else { fnTableSortColumn = col; fnTableSortDirection = (col === 'name' || col === 'gender') ? 'asc' : 'desc'; }
+            renderFirstNamesTable();
+        });
+    });
+}
+
+function renderFirstNamesTable() {
+    const FN = dashboardDataRaw.dicts.first_names || [];
+    const AFN = dashboardDataRaw.dicts.author_first_names || [];
+    const seenAuthors = new Set();
+    filteredData.forEach(item => item.authors.forEach(a => seenAuthors.add(a)));
+    const counts = new Map();
+    seenAuthors.forEach(a => {
+        const i = AFN[a];
+        if (i === undefined || i < 0) return;
+        counts.set(i, (counts.get(i) || 0) + 1);
+    });
+
+    let rows = Array.from(counts, ([i, count]) => {
+        const [name, gender, pf, freq, motivo] = FN[i];
+        return { name: name || '(nome abreviado)', gender, pf, freq, motivo, count };
+    });
+    const totals = { F: 0, M: 0, I: 0 };
+    rows.forEach(r => { totals[r.gender] += 1; });
+
+    if (fnTableGender !== 'all') rows = rows.filter(r => r.gender === fnTableGender);
+    if (fnTableSearch) rows = rows.filter(r => normalizeText(r.name).includes(fnTableSearch));
+
+    const dir = fnTableSortDirection === 'asc' ? 1 : -1;
+    const key = { name: r => r.name, gender: r => GENDER_LABELS[r.gender], count: r => r.count,
+                  pf: r => (r.pf === null ? -1 : r.pf), freq: r => r.freq }[fnTableSortColumn];
+    rows.sort((a, b) => {
+        const va = key(a), vb = key(b);
+        const c = typeof va === 'string' ? va.localeCompare(vb, 'pt-BR') : va - vb;
+        return c * dir || b.count - a.count || a.name.localeCompare(b.name, 'pt-BR');
+    });
+
+    ['name', 'gender', 'count', 'pf', 'freq'].forEach(col => {
+        const ind = document.querySelector(`#th-fn-${col} .sort-indicator`);
+        if (ind) ind.textContent = fnTableSortColumn === col ? (fnTableSortDirection === 'asc' ? ' ▲' : ' ▼') : '';
+    });
+
+    const nf = n => n.toLocaleString('pt-BR');
+    document.getElementById('fn-table-info').textContent =
+        `${nf(counts.size)} primeiros nomes distintos — Feminino: ${nf(totals.F)} · Masculino: ${nf(totals.M)} · Indefinido: ${nf(totals.I)}` +
+        (rows.length > FN_TABLE_LIMIT ? ` (mostrando ${nf(FN_TABLE_LIMIT)} de ${nf(rows.length)}; use a busca)` : '');
+
+    const tbody = document.getElementById('table-body-first-names');
+    tbody.innerHTML = '';
+    if (rows.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="7" style="text-align:center;color:var(--text-muted);padding:20px;">Nenhum nome encontrado</td></tr>';
+        return;
+    }
+    rows.slice(0, FN_TABLE_LIMIT).forEach((r, idx) => {
+        const tr = document.createElement('tr');
+        const cells = [
+            ['cell-rank', String(idx + 1)],
+            ['cell-fn-name', r.name],
+            ['', GENDER_LABELS[r.gender]],
+            ['cell-count', nf(r.count)],
+            ['cell-count', r.pf === null ? '—' : (r.pf * 100).toLocaleString('pt-BR', { minimumFractionDigits: 1, maximumFractionDigits: 1 }) + '%'],
+            ['cell-count', r.freq ? nf(r.freq) : '—'],
+            ['cell-fn-note', r.gender === 'I' ? r.motivo : '']
+        ];
+        cells.forEach(([cls, text], ci) => {
+            const td = document.createElement('td');
+            if (cls) td.className = cls;
+            if (ci === 2) {
+                const dot = document.createElement('span');
+                dot.className = 'gender-dot';
+                dot.style.background = GENDER_COLORS[r.gender];
+                td.appendChild(dot);
+                td.appendChild(document.createTextNode(text));
+            } else {
+                td.textContent = text;
+            }
+            tr.appendChild(td);
+        });
+        tbody.appendChild(tr);
+    });
+}
+
 // GRÁFICO: Colaboração científica (rosca)
 function renderCollabChart() {
     let intl = 0;
@@ -1914,6 +2069,8 @@ const CARD_RENDERERS = {
     'chart-language': () => renderLanguageChart(),
     'chart-type': () => renderTypeChart(),
     'chart-collab': () => renderCollabChart(),
+    'chart-author-gender': () => renderAuthorGenderChart(),
+    'chart-first-gender': () => renderFirstAuthorGenderChart(),
     'chart-oa-pie': () => renderOAPieChart(),
     'chart-oa-status': () => renderOAStatusBarChart(),
     'chart-sdg': () => renderSDGChart(),

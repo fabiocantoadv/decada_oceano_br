@@ -24,7 +24,8 @@ A consulta completa está em `collect_openalex.py`, e a data e as contagens da
 Total de publicações; evolução por ano; idioma; tipo de documento; colaboração
 científica (só autores brasileiros × internacional); autores (com ORCID),
 instituições, fontes e países; acesso aberto e modelo de acesso; áreas,
-subáreas e tópicos de pesquisa; e a listagem das publicações, com links para o
+subáreas e tópicos de pesquisa; gênero dos autores e do primeiro autor, com
+uma tabela de conferência dos primeiros nomes; e a listagem das publicações, com links para o
 OpenAlex e o DOI. Clicar em qualquer gráfico ou tabela filtra o painel inteiro.
 
 ## Como atualizar os dados
@@ -34,11 +35,15 @@ OpenAlex e o DOI. Clicar em qualquer gráfico ou tabela filtra o painel inteiro.
 export OPENALEX_API_KEY=sua_chave   # opcional, recomendado
 python3 collect_openalex.py
 
-# 2. Gera dashboard_data.js a partir da coleta
+# 2. Classifica o gênero dos autores pelo primeiro nome (base de nomes do IBGE,
+#    Censo 2010, via Brasil.IO: https://data.brasil.io/dataset/genero-nomes/nomes.csv.gz)
+python3 classify_gender_ibge.py --ibge caminho/para/nomes.csv.gz
+
+# 3. Gera dashboard_data.js a partir da coleta e da classificação de gênero
 python3 build_dashboard.py
 
-# 3. Publica
-git add dashboard_data.js dashboard_data.json openalex_collection_meta.json
+# 4. Publica
+git add dashboard_data.js dashboard_data.json openalex_collection_meta.json genero_ibge/
 git commit -m "data: atualiza coleta do OpenAlex"
 git push
 ```
@@ -53,6 +58,8 @@ git push
 | `collect_openalex.py` | Coleta na API do OpenAlex |
 | `build_dashboard.py` | Processa a coleta e gera os dados do painel |
 | `openalex_country_names.csv` | Nomes dos países como exibidos no OpenAlex |
+| `classify_gender_ibge.py` | Classificação de gênero dos autores pelo primeiro nome (IBGE) |
+| `genero_ibge/` | Resultado da classificação: autores, obras (1º autor) e resumo |
 | `build_dashboard_data.py`, `collect_*gender*.py`, `collect_crossref_*.py` | Pipeline do painel anterior (referência para a análise de gênero) |
 
 Para ver localmente, basta abrir `index.html` no navegador.
@@ -63,3 +70,13 @@ Para ver localmente, basta abrir `index.html` no navegador.
 > antes do commit, para os navegadores baixarem a versão nova.
 
 Baseado no projeto [oceanvega](https://github.com/wadsonlemos/oceanvega).
+
+## Gênero dos autores
+
+O gênero é uma **previsão estatística a partir do primeiro nome**, não uma
+autodeclaração. Usa exclusivamente a base de nomes do Censo 2010 do IBGE
+(versão do [Brasil.IO](https://brasil.io/dataset/genero-nomes/nomes/)): um nome
+é Feminino ou Masculino quando ao menos 90% das pessoas com esse nome no Brasil
+são do mesmo sexo e há ao menos 20 registros; nomes abreviados, ambíguos ou
+ausentes da base ficam como Indefinido. Como a base reflete o uso dos nomes no
+Brasil, a classificação é menos confiável para autores estrangeiros.

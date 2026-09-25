@@ -32,6 +32,7 @@ Campos por obra (ordem em "data"):
  14 citações (cited_by_count) — usado só para ordenar a listagem
  15 ODS            -> lista de números dos Objetivos de Desenvolvimento Sustentável
                        (sustainable_development_goals do OpenAlex, score >= 0,4)
+ 16 gênero do 1º autor -> F, M ou I (genero_ibge/obras_primeiro_autor.csv)
 """
 import csv
 import hashlib
@@ -45,6 +46,10 @@ QUERIES = ["textual", "subfields"]
 OUT_JSON = os.path.join(HERE, "dashboard_data.json")
 OUT_JS = os.path.join(HERE, "dashboard_data.js")
 COUNTRY_NAMES_CSV = os.path.join(HERE, "openalex_country_names.csv")
+# Gênero dos autores (gerado por classify_gender_ibge.py; opcional)
+AUTHOR_GENDER_CSV = os.path.join(HERE, "genero_ibge", "autores_genero_ibge.csv")
+WORK_FIRST_AUTHOR_CSV = os.path.join(HERE, "genero_ibge", "obras_primeiro_autor.csv")
+GENDER_CODE = {"FEMININO": "F", "MASCULINO": "M"}
 
 NO_INST = "Sem instituição"
 UNKNOWN_SOURCE = "Fonte desconhecida"
@@ -79,6 +84,8 @@ with open(COUNTRY_NAMES_CSV, encoding="utf-8") as f:
 # Autores: indexados pelo ID do OpenAlex (nomes se repetem entre pessoas diferentes)
 dicts["authors"] = []
 dicts["author_orcids"] = []  # ORCID sem o prefixo https://orcid.org/ ("" se não houver)
+dicts["author_genders"] = []  # F, M ou I — ver classify_gender_ibge.py
+dicts["author_first_names"] = []  # índice em dicts.first_names (-1 se não houver)
 author_index = {}
 
 
@@ -88,10 +95,44 @@ def author_idx(aid, name, orcid):
         author_index[aid] = len(dicts["authors"])
         dicts["authors"].append(name or aid)
         dicts["author_orcids"].append(orcid)
+        dicts["author_genders"].append(author_gender.get(aid.rsplit("/", 1)[-1], "I"))
+        dicts["author_first_names"].append(author_first.get(aid.rsplit("/", 1)[-1], -1))
     elif orcid and not dicts["author_orcids"][author_index[aid]]:
         dicts["author_orcids"][author_index[aid]] = orcid
     return author_index[aid]
 
+
+# Gênero previsto de cada autor pelo primeiro nome (IBGE): F, M ou I (indefinido)
+author_gender = {}
+# Primeiros nomes (para a tabela de conferência): nome -> índice em dicts.first_names,
+# cada item = [nome, gênero F/M/I, proporção feminina no IBGE (ou null), frequência no IBGE, motivo]
+author_first = {}
+first_name_index = {}
+dicts["first_names"] = []
+if os.path.exists(AUTHOR_GENDER_CSV):
+    with open(AUTHOR_GENDER_CSV, encoding="utf-8") as f:
+        for r in csv.DictReader(f):
+            author_gender[r["author_id"]] = GENDER_CODE.get(r["genero"], "I")
+            fn = r["primeiro_nome"]
+            if fn not in first_name_index:
+                pf = r.get("prop_feminina_ibge", "")
+                first_name_index[fn] = len(dicts["first_names"])
+                dicts["first_names"].append([
+                    fn, GENDER_CODE.get(r["genero"], "I"),
+                    round(float(pf), 4) if pf else None,
+                    int(r["freq_ibge"] or 0), r["motivo"],
+                ])
+            author_first[r["author_id"]] = first_name_index[fn]
+    print(f"Gênero: {len(author_gender):,} autores classificados carregados")
+else:
+    print("Aviso: genero_ibge/autores_genero_ibge.csv não encontrado; gênero dos autores ficará indefinido")
+
+# Gênero do primeiro autor de cada obra (inclui autores sem ID no OpenAlex)
+first_author_gender = {}
+if os.path.exists(WORK_FIRST_AUTHOR_CSV):
+    with open(WORK_FIRST_AUTHOR_CSV, encoding="utf-8") as f:
+        for r in csv.DictReader(f):
+            first_author_gender[r["work_id"]] = GENDER_CODE.get(r["genero_primeiro_autor"], "I")
 
 seen = set()
 rows = []
@@ -162,6 +203,7 @@ for q in QUERIES:
                 w.get("cited_by_count") or 0,
                 sorted({int(g["id"].rsplit("/", 1)[-1]) for g in (w.get("sustainable_development_goals") or [])
                         if g.get("id")}),
+                first_author_gender.get(wid.rsplit("/", 1)[-1], "I"),
             ])
     per_query[q] = n
 
