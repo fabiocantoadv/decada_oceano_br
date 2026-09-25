@@ -1,0 +1,37 @@
+{
+  "fonte": "IBGE Censo 2010 via Brasil.IO genero-nomes (nomes.csv.gz)",
+  "parametros": {
+    "limiar": 0.9,
+    "min_freq": 20
+  },
+  "autores": {
+    "total": 74714,
+    "por_genero": {
+      "MASCULINO": 35471,
+      "FEMININO": 26495,
+      "INDEFINIDO": 12748
+    },
+    "por_motivo": {
+      "IBGE": 61966,
+      "nome ausente do IBGE": 8000,
+      "nome ambíguo no IBGE": 1598,
+      "nome abreviado": 3150
+    }
+  },
+  "obras_primeiro_autor": {
+    "total": 22687,
+    "por_genero": {
+      "MASCULINO": 11316,
+      "FEMININO": 9048,
+      "INDEFINIDO": 2323
+    }
+  },
+  "obras_primeiro_autor_no_brasil": {
+    "total": 18294,
+    "por_genero": {
+      "FEMININO": 7682,
+      "MASCULINO": 9341,
+      "INDEFINIDO": 1271
+    }
+  }
+}
