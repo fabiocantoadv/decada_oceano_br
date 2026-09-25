@@ -115,7 +115,8 @@ function defaultFilters() {
         source: 'all', // fonte exata (clique na tabela); a busca do topo é por trecho
         author: 'all', // índice do autor em dicts.authors
         sdg: 'all',    // número do ODS (1–17)
-        firstGender: 'all' // gênero do 1º autor: 'F' | 'M' | 'I'
+        firstGender: 'all', // gênero do 1º autor: 'F' | 'M' | 'I'
+        firstGenderScope: 'geral'
     };
 }
 
@@ -173,7 +174,8 @@ const kpiPublications = document.getElementById('kpi-total-publications');
 let dashboardData = [];
 let AUTHOR_NAMES = [];
 let AUTHOR_ORCIDS = [];
-let AUTHOR_GENDERS = []; // F, M ou I por autor (classificação pelo primeiro nome, IBGE)
+let AUTHOR_GENDERS = []; // F, M ou I por autor (primeiro nome: IBGE ou WGND)
+let AUTHOR_SCOPES = [];  // B (vínculo no Brasil), E (só estrangeiro), N (sem país)
 let AUTHOR_DUP_NAMES = new Set(); // nomes usados por mais de um autor (IDs diferentes)
 
 function decompressData() {
@@ -185,6 +187,7 @@ function decompressData() {
     AUTHOR_NAMES = d.authors;
     AUTHOR_ORCIDS = d.author_orcids;
     AUTHOR_GENDERS = d.author_genders || [];
+    AUTHOR_SCOPES = d.author_scopes || [];
     const seenNames = new Set();
     AUTHOR_NAMES.forEach(n => { if (seenNames.has(n)) AUTHOR_DUP_NAMES.add(n); else seenNames.add(n); });
     dashboardData = dashboardDataRaw.data.map(item => ({
@@ -208,6 +211,7 @@ function decompressData() {
         citations: item[14],
         sdgs: item[15],
         firstGender: item[16] || 'I',
+        firstScope: item[17] || 'N',
         is_oa: OA_OPEN_STATUSES.includes(d.oa_statuses[item[9]]),
         count: 1
     }));
@@ -229,6 +233,7 @@ function init() {
     populateFilterOptions();
     setupEventListeners();
     setupFirstNamesTable();
+    setupGenderScopeToggles();
     setupExpandButtons();
     setupAnalysisSelector();
     updateTableInstSortIndicators();
@@ -443,7 +448,11 @@ function updateDashboard() {
         if (f.source !== 'all' && item.source !== f.source) return false;
         if (f.author !== 'all' && !item.authors.includes(f.author)) return false;
         if (f.sdg !== 'all' && !item.sdgs.includes(f.sdg)) return false;
-        if (f.firstGender !== 'all' && item.firstGender !== f.firstGender) return false;
+        if (f.firstGender !== 'all') {
+            if (item.firstGender !== f.firstGender) return false;
+            const sc = GENDER_SCOPE_CODE[f.firstGenderScope];
+            if (sc && item.firstScope !== sc) return false;
+        }
         return true;
     });
 
@@ -556,7 +565,7 @@ function renderActiveFiltersBar() {
     if (f.country !== 'all') tag("País", f.country, () => { activeFilters.country = 'all'; updateDashboard(); });
     if (f.openAccess !== 'all') tag("Acesso", f.openAccess === 'aberto' ? 'Aberto' : 'Fechado', () => { activeFilters.openAccess = 'all'; updateDashboard(); });
     if (f.oaStatus !== 'all') tag("Modelo de acesso", OA_STATUS_MAP[f.oaStatus] || f.oaStatus, () => { activeFilters.oaStatus = 'all'; updateDashboard(); });
-    if (f.firstGender !== 'all') tag("Gênero do 1º autor", GENDER_LABELS[f.firstGender], () => { activeFilters.firstGender = 'all'; updateDashboard(); });
+    if (f.firstGender !== 'all') tag("Gênero do 1º autor", GENDER_LABELS[f.firstGender] + (f.firstGenderScope && f.firstGenderScope !== 'geral' ? ` (${GENDER_SCOPE_LABELS[f.firstGenderScope].toLowerCase()})` : ''), () => { activeFilters.firstGender = 'all'; updateDashboard(); });
     if (f.sdg !== 'all') tag("ODS", sdgLabel(f.sdg), () => { activeFilters.sdg = 'all'; updateDashboard(); });
     if (f.author !== 'all') tag("Autor", authorLabel(f.author), () => { activeFilters.author = 'all'; updateDashboard(); });
     if (f.source !== 'all') tag("Fonte", f.source, () => { activeFilters.source = 'all'; updateDashboard(); });
@@ -607,7 +616,11 @@ function handleChartClick(chartType, datum) {
     if (!datum) return;
     if (chartType === 'first_gender') {
         const g = Object.keys(GENDER_LABELS).find(k => GENDER_LABELS[k] === datum.key);
-        if (g) activeFilters.firstGender = activeFilters.firstGender === g ? 'all' : g;
+        if (g) {
+            const same = activeFilters.firstGender === g && activeFilters.firstGenderScope === genderScope;
+            activeFilters.firstGender = same ? 'all' : g;
+            activeFilters.firstGenderScope = genderScope;
+        }
         updateDashboard();
         return;
     }
@@ -1450,11 +1463,32 @@ function renderSDGChart() {
 // publicações filtradas, pelo gênero previsto a partir do primeiro nome (IBGE).
 // Só visualização: não filtra o painel.
 const GENDER_LABELS = { F: 'Feminino', M: 'Masculino', I: 'Indefinido' };
+// Escopo da análise de gênero (seletor nos cards de gênero, sincronizado):
+// geral = todos; br = autores com vínculo no Brasil (classificados pelo IBGE);
+// ext = autores só com vínculo estrangeiro (classificados pela WGND pelo país).
+let genderScope = 'geral';
+const GENDER_SCOPE_CODE = { br: 'B', ext: 'E' };
+const GENDER_SCOPE_LABELS = { geral: 'Geral', br: 'Brasileiros', ext: 'Estrangeiros' };
+function inGenderScope(code) {
+    return genderScope === 'geral' || code === GENDER_SCOPE_CODE[genderScope];
+}
+function setupGenderScopeToggles() {
+    document.querySelectorAll('.gender-scope-toggle .toggle-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+            genderScope = btn.dataset.scope;
+            document.querySelectorAll('.gender-scope-toggle .toggle-btn').forEach(b =>
+                b.classList.toggle('active', b.dataset.scope === genderScope));
+            renderAuthorGenderChart();
+            renderFirstAuthorGenderChart();
+            renderFirstNamesTable();
+        });
+    });
+}
 const GENDER_COLORS = { F: '#9170B8', M: '#54B399', I: '#A0AEC0' };
 
 function renderAuthorGenderChart() {
     const seenAuthors = new Set();
-    filteredData.forEach(item => item.authors.forEach(a => seenAuthors.add(a)));
+    filteredData.forEach(item => item.authors.forEach(a => { if (inGenderScope(AUTHOR_SCOPES[a])) seenAuthors.add(a); }));
     const counts = { F: 0, M: 0, I: 0 };
     seenAuthors.forEach(a => { counts[AUTHOR_GENDERS[a] || 'I']++; });
     const total = seenAuthors.size || 1;
@@ -1469,8 +1503,13 @@ function renderAuthorGenderChart() {
 // previsto do 1º autor; clicar filtra o painel.
 function renderFirstAuthorGenderChart() {
     const counts = { F: 0, M: 0, I: 0 };
-    filteredData.forEach(item => { counts[item.firstGender] = (counts[item.firstGender] || 0) + 1; });
-    const total = filteredData.length || 1;
+    let total = 0;
+    filteredData.forEach(item => {
+        if (!inGenderScope(item.firstScope)) return;
+        counts[item.firstGender] = (counts[item.firstGender] || 0) + 1;
+        total++;
+    });
+    total = total || 1;
     const data = ['F', 'M', 'I']
         .map(g => ({ key: GENDER_LABELS[g], value: counts[g], color: GENDER_COLORS[g], percentage: counts[g] / total }))
         .filter(d => d.value > 0)
@@ -1497,10 +1536,10 @@ function setupFirstNamesTable() {
             renderFirstNamesTable();
         });
     });
-    ['name', 'gender', 'count', 'pf', 'freq'].forEach(col => {
+    ['name', 'gender', 'base', 'count', 'pf', 'freq'].forEach(col => {
         document.getElementById(`th-fn-${col}`).addEventListener('click', () => {
             if (fnTableSortColumn === col) fnTableSortDirection = fnTableSortDirection === 'asc' ? 'desc' : 'asc';
-            else { fnTableSortColumn = col; fnTableSortDirection = (col === 'name' || col === 'gender') ? 'asc' : 'desc'; }
+            else { fnTableSortColumn = col; fnTableSortDirection = (col === 'name' || col === 'gender' || col === 'base') ? 'asc' : 'desc'; }
             renderFirstNamesTable();
         });
     });
@@ -1510,7 +1549,7 @@ function renderFirstNamesTable() {
     const FN = dashboardDataRaw.dicts.first_names || [];
     const AFN = dashboardDataRaw.dicts.author_first_names || [];
     const seenAuthors = new Set();
-    filteredData.forEach(item => item.authors.forEach(a => seenAuthors.add(a)));
+    filteredData.forEach(item => item.authors.forEach(a => { if (inGenderScope(AUTHOR_SCOPES[a])) seenAuthors.add(a); }));
     const counts = new Map();
     seenAuthors.forEach(a => {
         const i = AFN[a];
@@ -1519,8 +1558,8 @@ function renderFirstNamesTable() {
     });
 
     let rows = Array.from(counts, ([i, count]) => {
-        const [name, gender, pf, freq, motivo] = FN[i];
-        return { name: name || '(nome abreviado)', gender, pf, freq, motivo, count };
+        const [name, gender, pf, freq, motivo, base] = FN[i];
+        return { name: name || '(nome abreviado)', gender, pf, freq, motivo, base: base || 'IBGE', count };
     });
     const totals = { F: 0, M: 0, I: 0 };
     rows.forEach(r => { totals[r.gender] += 1; });
@@ -1529,7 +1568,7 @@ function renderFirstNamesTable() {
     if (fnTableSearch) rows = rows.filter(r => normalizeText(r.name).includes(fnTableSearch));
 
     const dir = fnTableSortDirection === 'asc' ? 1 : -1;
-    const key = { name: r => r.name, gender: r => GENDER_LABELS[r.gender], count: r => r.count,
+    const key = { name: r => r.name, gender: r => GENDER_LABELS[r.gender], base: r => r.base, count: r => r.count,
                   pf: r => (r.pf === null ? -1 : r.pf), freq: r => r.freq }[fnTableSortColumn];
     rows.sort((a, b) => {
         const va = key(a), vb = key(b);
@@ -1537,20 +1576,20 @@ function renderFirstNamesTable() {
         return c * dir || b.count - a.count || a.name.localeCompare(b.name, 'pt-BR');
     });
 
-    ['name', 'gender', 'count', 'pf', 'freq'].forEach(col => {
+    ['name', 'gender', 'base', 'count', 'pf', 'freq'].forEach(col => {
         const ind = document.querySelector(`#th-fn-${col} .sort-indicator`);
         if (ind) ind.textContent = fnTableSortColumn === col ? (fnTableSortDirection === 'asc' ? ' ▲' : ' ▼') : '';
     });
 
     const nf = n => n.toLocaleString('pt-BR');
     document.getElementById('fn-table-info').textContent =
-        `${nf(counts.size)} primeiros nomes distintos — Feminino: ${nf(totals.F)} · Masculino: ${nf(totals.M)} · Indefinido: ${nf(totals.I)}` +
+        `${nf(counts.size)} combinações de nome, gênero e base — Feminino: ${nf(totals.F)} · Masculino: ${nf(totals.M)} · Indefinido: ${nf(totals.I)}` +
         (rows.length > FN_TABLE_LIMIT ? ` (mostrando ${nf(FN_TABLE_LIMIT)} de ${nf(rows.length)}; use a busca)` : '');
 
     const tbody = document.getElementById('table-body-first-names');
     tbody.innerHTML = '';
     if (rows.length === 0) {
-        tbody.innerHTML = '<tr><td colspan="7" style="text-align:center;color:var(--text-muted);padding:20px;">Nenhum nome encontrado</td></tr>';
+        tbody.innerHTML = '<tr><td colspan="8" style="text-align:center;color:var(--text-muted);padding:20px;">Nenhum nome encontrado</td></tr>';
         return;
     }
     rows.slice(0, FN_TABLE_LIMIT).forEach((r, idx) => {
@@ -1559,10 +1598,11 @@ function renderFirstNamesTable() {
             ['cell-rank', String(idx + 1)],
             ['cell-fn-name', r.name],
             ['', GENDER_LABELS[r.gender]],
+            ['cell-fn-base', r.base],
             ['cell-count', nf(r.count)],
             ['cell-count', r.pf === null ? '—' : (r.pf * 100).toLocaleString('pt-BR', { minimumFractionDigits: 1, maximumFractionDigits: 1 }) + '%'],
             ['cell-count', r.freq ? nf(r.freq) : '—'],
-            ['cell-fn-note', r.gender === 'I' ? r.motivo : '']
+            ['cell-fn-note', r.gender === 'I' ? r.motivo : (r.base === 'WGND' ? 'pelo país de afiliação' : '')]
         ];
         cells.forEach(([cls, text], ci) => {
             const td = document.createElement('td');

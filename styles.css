@@ -1805,7 +1805,7 @@ body.modal-open {
 .fn-toolbar .table-filter-bar {
     flex: 0 1 360px;
 }
-.fn-table th:nth-child(4), .fn-table th:nth-child(5), .fn-table th:nth-child(6) {
+.fn-table th:nth-child(5), .fn-table th:nth-child(6), .fn-table th:nth-child(7) {
     text-align: right;
 }
 .fn-table td.cell-fn-name {
@@ -2066,4 +2066,12 @@ body.modal-open {
     color: var(--primary-hover);
     border-color: rgba(85, 179, 153, 0.5);
     background-color: var(--primary-light);
+}
+.fn-table td.cell-fn-base {
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--text-muted);
+}
+.gender-scope-toggle .toggle-btn {
+    padding: 5px 10px;
 }

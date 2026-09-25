@@ -38,12 +38,15 @@ python3 collect_openalex.py
 # 2. Classifica o gênero dos autores pelo primeiro nome (base de nomes do IBGE,
 #    Censo 2010, via Brasil.IO: https://data.brasil.io/dataset/genero-nomes/nomes.csv.gz)
 python3 classify_gender_ibge.py --ibge caminho/para/nomes.csv.gz
+#    e dos autores só com vínculo estrangeiro pelo país de afiliação (WGND 2.0,
+#    WIPO: https://doi.org/10.7910/DVN/MSEGSJ — pasta com os CSVs da WGND)
+python3 classify_gender_wgnd_foreign.py --wgnd caminho/para/dataverse_files
 
 # 3. Gera dashboard_data.js a partir da coleta e da classificação de gênero
 python3 build_dashboard.py
 
 # 4. Publica
-git add dashboard_data.js dashboard_data.json openalex_collection_meta.json genero_ibge/
+git add dashboard_data.js dashboard_data.json openalex_collection_meta.json genero_ibge/ genero_wgnd/
 git commit -m "data: atualiza coleta do OpenAlex"
 git push
 ```
@@ -61,7 +64,8 @@ git push
 | `build_dashboard.py` | Processa a coleta e gera os dados do painel |
 | `openalex_country_names.csv` | Nomes dos países como exibidos no OpenAlex |
 | `classify_gender_ibge.py` | Classificação de gênero dos autores pelo primeiro nome (IBGE) |
-| `genero_ibge/` | Resultado da classificação: autores, obras (1º autor) e resumo |
+| `classify_gender_wgnd_foreign.py` | Classificação dos autores estrangeiros pela WGND 2.0, pelo país |
+| `genero_ibge/`, `genero_wgnd/` | Resultados da classificação de gênero (IBGE e WGND) |
 | `build_dashboard_data.py`, `collect_*gender*.py`, `collect_crossref_*.py` | Pipeline do painel anterior (referência para a análise de gênero) |
 
 Para ver localmente, basta abrir `index.html` no navegador.
@@ -76,9 +80,8 @@ Baseado no projeto [oceanvega](https://github.com/wadsonlemos/oceanvega).
 ## Gênero dos autores
 
 O gênero é uma **previsão estatística a partir do primeiro nome**, não uma
-autodeclaração. Usa exclusivamente a base de nomes do Censo 2010 do IBGE
-(versão do [Brasil.IO](https://brasil.io/dataset/genero-nomes/nomes/)): um nome
-é Feminino ou Masculino quando ao menos 90% das pessoas com esse nome no Brasil
-são do mesmo sexo e há ao menos 20 registros; nomes abreviados, ambíguos ou
-ausentes da base ficam como Indefinido. Como a base reflete o uso dos nomes no
-Brasil, a classificação é menos confiável para autores estrangeiros.
+autodeclaração. Autores com vínculo no Brasil (ou sem país) usam a base de nomes
+do Censo 2010 do IBGE (versão do [Brasil.IO](https://brasil.io/dataset/genero-nomes/nomes/));
+autores só com vínculo estrangeiro usam a WGND 2.0 (WIPO) pelo país de afiliação.
+Um nome é Feminino ou Masculino quando ao menos 90% das ocorrências são desse
+gênero; nomes abreviados, ambíguos ou ausentes da base ficam como Indefinido.

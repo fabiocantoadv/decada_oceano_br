@@ -32,7 +32,8 @@ Campos por obra (ordem em "data"):
  14 citações (cited_by_count) — usado só para ordenar a listagem
  15 ODS            -> lista de números dos Objetivos de Desenvolvimento Sustentável
                        (sustainable_development_goals do OpenAlex, score >= 0,4)
- 16 gênero do 1º autor -> F, M ou I (genero_ibge/obras_primeiro_autor.csv)
+ 16 gênero do 1º autor -> F, M ou I (IBGE; WGND se o autor for só estrangeiro)
+ 17 escopo do 1º autor  -> B (vínculo no Brasil na obra), E (só estrangeiro) ou N (sem país)
 """
 import csv
 import hashlib
@@ -49,6 +50,8 @@ COUNTRY_NAMES_CSV = os.path.join(HERE, "openalex_country_names.csv")
 # Gênero dos autores (gerado por classify_gender_ibge.py; opcional)
 AUTHOR_GENDER_CSV = os.path.join(HERE, "genero_ibge", "autores_genero_ibge.csv")
 WORK_FIRST_AUTHOR_CSV = os.path.join(HERE, "genero_ibge", "obras_primeiro_autor.csv")
+# Autores só com afiliação estrangeira: WGND 2.0 pelo país (classify_gender_wgnd_foreign.py)
+WGND_FOREIGN_CSV = os.path.join(HERE, "genero_wgnd", "autores_estrangeiros_wgnd.csv")
 GENDER_CODE = {"FEMININO": "F", "MASCULINO": "M"}
 
 NO_INST = "Sem instituição"
@@ -86,6 +89,7 @@ dicts["authors"] = []
 dicts["author_orcids"] = []  # ORCID sem o prefixo https://orcid.org/ ("" se não houver)
 dicts["author_genders"] = []  # F, M ou I — ver classify_gender_ibge.py
 dicts["author_first_names"] = []  # índice em dicts.first_names (-1 se não houver)
+dicts["author_scopes"] = []  # B (vínculo no Brasil), E (só estrangeiro) ou N (sem país)
 author_index = {}
 
 
@@ -96,6 +100,7 @@ def author_idx(aid, name, orcid):
         dicts["authors"].append(name or aid)
         dicts["author_orcids"].append(orcid)
         dicts["author_genders"].append(author_gender.get(aid.rsplit("/", 1)[-1], "I"))
+        dicts["author_scopes"].append(author_scope.get(aid.rsplit("/", 1)[-1], "N"))
         dicts["author_first_names"].append(author_first.get(aid.rsplit("/", 1)[-1], -1))
     elif orcid and not dicts["author_orcids"][author_index[aid]]:
         dicts["author_orcids"][author_index[aid]] = orcid
@@ -103,36 +108,66 @@ def author_idx(aid, name, orcid):
 
 
 # Gênero previsto de cada autor pelo primeiro nome (IBGE): F, M ou I (indefinido)
+# Gênero de cada autor: IBGE para autores com vínculo no Brasil (ou sem país) e
+# WGND 2.0 pelo país de afiliação para autores só com vínculo estrangeiro.
+# Escopo do autor: B = com vínculo no Brasil, E = só estrangeiro, N = sem país.
 author_gender = {}
-# Primeiros nomes (para a tabela de conferência): nome -> índice em dicts.first_names,
-# cada item = [nome, gênero F/M/I, proporção feminina no IBGE (ou null), frequência no IBGE, motivo]
+author_scope = {}
+# Tabela de conferência: primeiros nomes agrupados por (nome, gênero, base, motivo);
+# cada item = [nome, gênero F/M/I, proporção feminina no IBGE (ou null),
+#              pessoas no IBGE (ou 0), motivo, base "IBGE"|"WGND"]
 author_first = {}
 first_name_index = {}
 dicts["first_names"] = []
+
+wgnd = {}
+if os.path.exists(WGND_FOREIGN_CSV):
+    with open(WGND_FOREIGN_CSV, encoding="utf-8") as f:
+        for r in csv.DictReader(f):
+            wgnd[r["author_id"]] = r
+    print(f"WGND: {len(wgnd):,} autores estrangeiros classificados carregados")
+else:
+    print("Aviso: genero_wgnd/autores_estrangeiros_wgnd.csv não encontrado; estrangeiros usarão o IBGE")
+
 if os.path.exists(AUTHOR_GENDER_CSV):
     with open(AUTHOR_GENDER_CSV, encoding="utf-8") as f:
         for r in csv.DictReader(f):
-            author_gender[r["author_id"]] = GENDER_CODE.get(r["genero"], "I")
+            aid = r["author_id"]
+            paises = [p for p in r["paises"].split(";") if p]
+            scope = "B" if "BR" in paises else ("E" if paises else "N")
+            author_scope[aid] = scope
             fn = r["primeiro_nome"]
-            if fn not in first_name_index:
+            if scope == "E" and aid in wgnd:
+                w = wgnd[aid]
+                g = GENDER_CODE.get(w["genero_wgnd"], "I")
+                key = (fn, g, "WGND", w["motivo_wgnd"])
+                entry = [fn, g, None, 0, w["motivo_wgnd"], "WGND"]
+            else:
+                g = GENDER_CODE.get(r["genero"], "I")
                 pf = r.get("prop_feminina_ibge", "")
-                first_name_index[fn] = len(dicts["first_names"])
-                dicts["first_names"].append([
-                    fn, GENDER_CODE.get(r["genero"], "I"),
-                    round(float(pf), 4) if pf else None,
-                    int(r["freq_ibge"] or 0), r["motivo"],
-                ])
-            author_first[r["author_id"]] = first_name_index[fn]
+                key = (fn, g, "IBGE", r["motivo"])
+                entry = [fn, g, round(float(pf), 4) if pf else None, int(r["freq_ibge"] or 0), r["motivo"], "IBGE"]
+            author_gender[aid] = g
+            if key not in first_name_index:
+                first_name_index[key] = len(dicts["first_names"])
+                dicts["first_names"].append(entry)
+            author_first[aid] = first_name_index[key]
     print(f"Gênero: {len(author_gender):,} autores classificados carregados")
 else:
     print("Aviso: genero_ibge/autores_genero_ibge.csv não encontrado; gênero dos autores ficará indefinido")
 
-# Gênero do primeiro autor de cada obra (inclui autores sem ID no OpenAlex)
+# Gênero e escopo do primeiro autor de cada obra (inclui autores sem ID no OpenAlex).
+# O escopo usa os países do primeiro autor NAQUELA obra.
 first_author_gender = {}
+first_author_scope = {}
 if os.path.exists(WORK_FIRST_AUTHOR_CSV):
     with open(WORK_FIRST_AUTHOR_CSV, encoding="utf-8") as f:
         for r in csv.DictReader(f):
-            first_author_gender[r["work_id"]] = GENDER_CODE.get(r["genero_primeiro_autor"], "I")
+            aid = r["author_id"]
+            g = author_gender.get(aid, GENDER_CODE.get(r["genero_primeiro_autor"], "I"))
+            paises = [p for p in (r.get("paises_primeiro_autor") or "").split(";") if p]
+            first_author_gender[r["work_id"]] = g
+            first_author_scope[r["work_id"]] = "B" if "BR" in paises else ("E" if paises else "N")
 
 seen = set()
 rows = []
@@ -204,6 +239,7 @@ for q in QUERIES:
                 sorted({int(g["id"].rsplit("/", 1)[-1]) for g in (w.get("sustainable_development_goals") or [])
                         if g.get("id")}),
                 first_author_gender.get(wid.rsplit("/", 1)[-1], "I"),
+                first_author_scope.get(wid.rsplit("/", 1)[-1], "N"),
             ])
     per_query[q] = n
 

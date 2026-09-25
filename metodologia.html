@@ -7,7 +7,7 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Montserrat:wght@500;600;700&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="styles.css?v=047a200540">
+    <link rel="stylesheet" href="styles.css?v=76d7a01ebb">
     <script src="collection_meta.js?v=20dfed1177"></script>
 </head>
 <body>
@@ -219,21 +219,35 @@
                 <h2>Gênero dos autores</h2>
                 <p>
                     O gênero é uma <strong>previsão estatística a partir do primeiro nome</strong>, não uma
-                    autodeclaração. A classificação usa exclusivamente a base de nomes do Censo Demográfico 2010 do
-                    <strong>IBGE</strong>, na versão organizada pelo
-                    <a href="https://brasil.io/dataset/genero-nomes/nomes/" target="_blank" rel="noopener">Brasil.IO</a>
-                    (cerca de 100 mil nomes, com o número de pessoas de cada sexo). Um autor é classificado como
-                    <strong>Feminino</strong> ou <strong>Masculino</strong> quando ao menos <strong>90%</strong> das
-                    pessoas com aquele nome no Brasil são do mesmo sexo e o nome tem ao menos <strong>20</strong>
-                    registros. Ficam como <strong>Indefinido</strong> os nomes abreviados (iniciais), os nomes ambíguos
-                    e os ausentes da base. Não são usados fotos, textos, inteligência artificial generativa nem
-                    outras bases de nomes.
+                    autodeclaração. Como a associação entre nome e gênero varia entre países (Andrea, por exemplo, é
+                    majoritariamente feminino no Brasil e masculino na Itália), a classificação usa bases diferentes
+                    conforme a afiliação do autor:
+                </p>
+                <ul>
+                    <li><strong>Autores com vínculo no Brasil</strong> (e autores sem país informado): base de nomes do
+                        Censo Demográfico 2010 do <strong>IBGE</strong>, na versão organizada pelo
+                        <a href="https://brasil.io/dataset/genero-nomes/nomes/" target="_blank" rel="noopener">Brasil.IO</a>
+                        (cerca de 100 mil nomes, com o número de pessoas de cada sexo). O nome precisa ter ao menos
+                        20 registros.</li>
+                    <li><strong>Autores só com vínculo estrangeiro</strong>: <strong>World Gender Name Dictionary 2.0</strong>
+                        (WGND 2.0), da Organização Mundial da Propriedade Intelectual (Lax-Martinez <em>et al.</em>, 2021),
+                        que informa a proporção de cada gênero por nome <strong>e por país</strong>. O nome é buscado
+                        em cada país de afiliação do autor; se os países tiverem classificações diferentes, o autor
+                        fica indefinido.</li>
+                </ul>
+                <p>
+                    Em ambos os casos, um autor é classificado como <strong>Feminino</strong> ou
+                    <strong>Masculino</strong> quando ao menos <strong>90%</strong> das ocorrências do nome são desse
+                    gênero. Ficam como <strong>Indefinido</strong> os nomes abreviados (iniciais), os nomes ambíguos e
+                    os ausentes da base — no caso da WGND, ausentes para o país de afiliação do autor. Não são usados
+                    fotos, textos, inteligência artificial generativa nem outras bases de nomes.
                 </p>
                 <p>
-                    O painel apresenta o gênero de todos os autores distintos e o do primeiro autor de cada obra, além
-                    de uma tabela com os primeiros nomes para conferência. Como a base reflete o uso dos nomes no
-                    Brasil, a classificação é menos confiável para autores estrangeiros: nomes como Andrea ou Simone
-                    são majoritariamente femininos no Brasil, mas masculinos na Itália.
+                    O painel apresenta o gênero de todos os autores distintos e o do primeiro autor de cada obra, com
+                    um seletor para ver o conjunto geral, apenas autores com vínculo no Brasil ou apenas autores
+                    estrangeiros, além de uma tabela com os primeiros nomes e a base usada, para conferência. A
+                    indefinição é maior entre autores estrangeiros, sobretudo em nomes de origem asiática e em países
+                    com pouca cobertura na WGND, como os da América Latina.
                 </p>
             </section>
 
@@ -251,7 +265,8 @@
                 <h2>Reprodutibilidade</h2>
                 <p>
                     Todo o processo é aberto e reproduzível. Os scripts de coleta (<code>collect_openalex.py</code>),
-                    de classificação de gênero (<code>classify_gender_ibge.py</code>) e de geração dos dados do painel
+                    de classificação de gênero (<code>classify_gender_ibge.py</code> e
+                    <code>classify_gender_wgnd_foreign.py</code>) e de geração dos dados do painel
                     (<code>build_dashboard.py</code>), bem como os resultados da classificação, estão disponíveis no
                     repositório <a href="https://github.com/fabiocantoadv/decada_oceano_br" target="_blank" rel="noopener">fabiocantoadv/decada_oceano_br</a>.
                     O processamento foi feito em Python, e os gráficos usam a biblioteca Vega-Lite.
@@ -267,7 +282,7 @@
                     <strong>Anthropic</strong>, utilizado como agente de programação. As decisões metodológicas, a
                     revisão dos resultados e a interpretação das análises são de responsabilidade da equipe de
                     autoria. A classificação de gênero em si não utiliza inteligência artificial: é uma regra
-                    determinística aplicada à base de nomes do IBGE, descrita na seção
+                    determinística aplicada às bases de nomes do IBGE e da WGND, descrita na seção
                     <a href="#genero">Gênero dos autores</a>.
                 </p>
             </section>
@@ -295,6 +310,11 @@
                 <p>
                     IOC; UNESCO. <strong>Global Ocean Science Report 2020</strong>: charting capacity for ocean
                     sustainability: executive summary. Paris: Unesco Publishing, 2020. (IOC Policy Series, 2020-1).
+                </p>
+                <p>
+                    LAX-MARTINEZ, G. <em>et al.</em> <strong>Expanding the World Gender-Name Dictionary</strong>:
+                    WGND 2.0. Geneva: WIPO, 2021. (WIPO Economic Research Working Paper, 64). Dados:
+                    <a href="https://doi.org/10.7910/DVN/MSEGSJ" target="_blank" rel="noopener">https://doi.org/10.7910/DVN/MSEGSJ</a>.
                 </p>
                 <p>
                     PRIEM, J.; PIWOWAR, H.; ORR, R. <strong>OpenAlex</strong>: a fully-open index of scholarly works,
