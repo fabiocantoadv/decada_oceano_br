@@ -39,7 +39,7 @@ python3 collect_openalex.py
 #    Censo 2010, via Brasil.IO: https://data.brasil.io/dataset/genero-nomes/nomes.csv.gz)
 python3 classify_gender_ibge.py --ibge caminho/para/nomes.csv.gz
 #    e dos autores só com vínculo estrangeiro pelo país de afiliação (WGND 2.0,
-#    WIPO: https://doi.org/10.7910/DVN/MSEGSJ — pasta com os CSVs da WGND)
+#    WIPO: https://dataverse.harvard.edu/dataset.xhtml?persistentId=doi:10.7910/DVN/MSEGSJ — pasta com os CSVs da WGND)
 python3 classify_gender_wgnd_foreign.py --wgnd caminho/para/dataverse_files
 
 # 3. Gera dashboard_data.js a partir da coleta e da classificação de gênero
@@ -82,6 +82,6 @@ Baseado no projeto [oceanvega](https://github.com/wadsonlemos/oceanvega).
 O gênero é uma **previsão estatística a partir do primeiro nome**, não uma
 autodeclaração. Autores com vínculo no Brasil (ou sem país) usam a base de nomes
 do Censo 2010 do IBGE (versão do [Brasil.IO](https://brasil.io/dataset/genero-nomes/nomes/));
-autores só com vínculo estrangeiro usam a WGND 2.0 (WIPO) pelo país de afiliação.
+autores só com vínculo estrangeiro usam a [WGND 2.0](https://dataverse.harvard.edu/dataset.xhtml?persistentId=doi:10.7910/DVN/MSEGSJ) (WIPO) pelo país de afiliação.
 Um nome é Feminino ou Masculino quando ao menos 90% das ocorrências são desse
 gênero; nomes abreviados, ambíguos ou ausentes da base ficam como Indefinido.
