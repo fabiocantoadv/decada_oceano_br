@@ -53,6 +53,8 @@ git push
 | Arquivo | Função |
 |---|---|
 | `index.html`, `app.js`, `styles.css` | Painel (estático, sem build) |
+| `metodologia.html` | Página de metodologia (aberta pelo botão no cabeçalho) |
+| `collection_meta.js` | Data e contagens da coleta, gerados pelo build para a metodologia |
 | `lib/` | Vega, Vega-Lite e Vega-Embed locais |
 | `dashboard_data.js` | Dados do painel, gerados por `build_dashboard.py` |
 | `collect_openalex.py` | Coleta na API do OpenAlex |

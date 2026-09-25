@@ -1,0 +1,340 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Metodologia — Projeto Oceano</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Montserrat:wght@500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="styles.css?v=535d616f34">
+    <script src="collection_meta.js?v=20dfed1177"></script>
+</head>
+<body>
+    <div class="app-container">
+        <header class="dashboard-header">
+            <div class="header-content" style="flex-grow: 1;">
+                <div class="logo-area">
+                    <svg class="logo-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                        <path d="M2 17c.6-1.5 2.1-2.5 3.5-2.5 2 0 2 1.5 4 1.5s2-1.5 4-1.5 2 1.5 4 1.5 2-1.5 4-1.5c1.4 0 2.9 1 3.5 2.5"/>
+                        <path d="M2 12c.6-1.5 2.1-2.5 3.5-2.5 2 0 2 1.5 4 1.5s2-1.5 4-1.5 2 1.5 4 1.5 2-1.5 4-1.5c1.4 0 2.9 1 3.5 2.5"/>
+                        <path d="M2 7c.6-1.5 2.1-2.5 3.5-2.5 2 0 2 1.5 4 1.5s2-1.5 4-1.5 2 1.5 4 1.5 2-1.5 4-1.5c1.4 0 2.9 1 3.5 2.5"/>
+                    </svg>
+                    <div>
+                        <h1 style="font-size: 20px; line-height: 1.3;">Projeto Oceano: análise de publicações brasileiras sobre o oceano</h1>
+                        <p class="subtitle">Metodologia</p>
+                    </div>
+                </div>
+            </div>
+            <div class="header-nav">
+                <a class="header-btn" href="index.html">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="9" rx="1"/><rect x="14" y="3" width="7" height="5" rx="1"/><rect x="14" y="12" width="7" height="9" rx="1"/><rect x="3" y="16" width="7" height="5" rx="1"/></svg>
+                    Voltar ao painel
+                </a>
+            </div>
+        </header>
+
+        <article class="method-page">
+            <nav class="method-toc" aria-label="Nesta página">
+                <span class="method-toc-title">Nesta página</span>
+                <a href="#autoria">Autoria</a>
+                <a href="#introducao">Introdução</a>
+                <a href="#fonte">Fonte de dados</a>
+                <a href="#estrategia">Estratégia de busca</a>
+                <a href="#coleta">Coleta</a>
+                <a href="#tratamento">Tratamento e indicadores</a>
+                <a href="#genero">Gênero dos autores</a>
+                <a href="#limitacoes">Limitações</a>
+                <a href="#reproducao">Reprodutibilidade</a>
+                <a href="#uso-ia">Declaração de uso de IA</a>
+                <a href="#referencias">Referências</a>
+            </nav>
+
+            <section id="autoria" class="method-section">
+                <h2>Autoria</h2>
+                <div class="author-grid">
+                    <div class="author-card">
+                        <span class="author-name">Germana Barata</span>
+                        <span class="author-degree">Doutora em História Social</span>
+                        <span class="author-inst">Universidade Estadual de Campinas (Unicamp)</span>
+                        <div class="author-links">
+                            <a class="orcid-link" href="https://orcid.org/0000-0001-6064-6952" target="_blank" rel="noopener">0000-0001-6064-6952</a>
+                            <a class="lattes-link" href="https://lattes.cnpq.br/0932728498482206" target="_blank" rel="noopener">Currículo Lattes</a>
+                        </div>
+                    </div>
+                    <div class="author-card">
+                        <span class="author-name">Washington Segundo</span>
+                        <span class="author-degree">Doutor em Informática</span>
+                        <span class="author-inst">Instituto Brasileiro de Informação em Ciência e Tecnologia (Ibict)</span>
+                        <div class="author-links">
+                            <a class="orcid-link" href="https://orcid.org/0000-0003-3635-9384" target="_blank" rel="noopener">0000-0003-3635-9384</a>
+                            <a class="lattes-link" href="http://lattes.cnpq.br/9453481318889500" target="_blank" rel="noopener">Currículo Lattes</a>
+                        </div>
+                    </div>
+                    <div class="author-card">
+                        <span class="author-name">Fabio Lorensi do Canto</span>
+                        <span class="author-degree">Doutor em Ciência da Informação</span>
+                        <span class="author-inst">Instituto Brasileiro de Informação em Ciência e Tecnologia (Ibict)</span>
+                        <div class="author-links">
+                            <a class="orcid-link" href="https://orcid.org/0000-0002-8338-1931" target="_blank" rel="noopener">0000-0002-8338-1931</a>
+                            <a class="lattes-link" href="http://lattes.cnpq.br/5914776544385758" target="_blank" rel="noopener">Currículo Lattes</a>
+                        </div>
+                    </div>
+                    <div class="author-card">
+                        <span class="author-name">Wadson Rocha Lemos</span>
+                        <span class="author-degree">Graduado em Sistemas de Informação</span>
+                        <span class="author-inst">Instituto Brasileiro de Informação em Ciência e Tecnologia (Ibict)</span>
+                        <div class="author-links">
+                            <a class="orcid-link" href="https://orcid.org/0009-0008-1510-2401" target="_blank" rel="noopener">0009-0008-1510-2401</a>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <section id="introducao" class="method-section">
+                <h2>Introdução</h2>
+                <p>
+                    A <strong>Década do Oceano</strong> foi instituída em 2017, após um extenso relatório sobre o
+                    avançado estado de degradação do oceano (United Nations, 2017). Entre 2021 e 2030, os países membros da
+                    Organização das Nações Unidas (ONU) se comprometeram a investir nas ciências oceânicas e na produção
+                    de conhecimento para reverter esse cenário. Entre os dez desafios estabelecidos estão mudar a
+                    relação da sociedade com o oceano (<strong>Desafio 10</strong>) e desenvolver habilidades,
+                    conhecimentos, tecnologias e participação para todos (<strong>Desafio 9</strong>), a partir do
+                    acesso a informações de qualidade — uma agenda que dialoga com os 17
+                    <strong>Objetivos de Desenvolvimento Sustentável</strong> (ODS) da Agenda 2030 (Fick; Carneiro, 2024).
+                </p>
+                <p>
+                    O mapeamento da produção científica sobre o oceano é um dos indicadores de como a informação
+                    circula no meio acadêmico antes de chegar à sociedade. Levantamentos anteriores, como o
+                    <em>Global Ocean Science Report</em> — que inicialmente cobriu 34 países, sem incluir o Brasil
+                    (United Nations, 2017), e em 2020 mostrou o país crescendo acima da média mundial (IOC; Unesco, 2020) — e um
+                    estudo que identificou 8 mil artigos sobre o ODS 14 (Vida na Água) com autoria brasileira
+                    (Bori-Elsevier, 2025), não são padronizados e tratam o oceano de modo limitado: usam bases com
+                    baixa representatividade de idiomas, de países do Sul Global e das Humanidades, ou não são
+                    realizados periodicamente.
+                </p>
+                <p>
+                    Este painel mapeia a produção científica brasileira sobre o oceano no <strong>OpenAlex</strong>
+                    (Priem; Piwowar; Orr, 2022), fonte de acesso aberto com ampla cobertura temática, que inclui as
+                    Humanidades e publicações em idiomas além do inglês. O monitoramento começa em 2018, antes do
+                    início da Década, e permite acompanhar a evolução dessa produção, a representatividade das
+                    diferentes áreas do conhecimento e sua conexão com os ODS. Diante da relevância desse
+                    acompanhamento, os resultados são disponibilizados publicamente na forma deste painel interativo.
+                </p>
+            </section>
+
+            <section id="fonte" class="method-section">
+                <h2>Fonte de dados</h2>
+                <p>
+                    Os registros foram recuperados do <a href="https://openalex.org" target="_blank" rel="noopener">OpenAlex</a>,
+                    base aberta e gratuita de metadados sobre a produção científica mundial (Priem; Piwowar; Orr, 2022).
+                    Foram considerados <strong>artigos e revisões</strong> publicados a partir de <strong>2018</strong>
+                    com <strong>ao menos um autor vinculado a instituição brasileira</strong>.
+                </p>
+            </section>
+
+            <section id="estrategia" class="method-section">
+                <h2>Estratégia de busca</h2>
+                <p>
+                    A busca combina duas estratégias: (1) uma busca textual no <strong>título e resumo</strong>, que
+                    exige ao mesmo tempo um termo ligado ao mar ou ao oceano e um termo ligado a meio ambiente,
+                    biodiversidade, clima, comunidades costeiras, economia azul ou temas correlatos, em português e
+                    em inglês; e (2) a classificação temática do OpenAlex, incluindo as obras das subáreas
+                    <strong>Oceanography</strong> (1910) e <strong>Ocean Engineering</strong> (2212).
+                </p>
+                <p>
+                    A consulta pode ser reproduzida diretamente na interface do OpenAlex:
+                    <a class="method-link" href="https://openalex.org/q?oql=works+where+year+%3E=+(2018)+and+country+is+(BR)+and+type+is+(article+or+review)+and+(+title/abstract+has+(+(+mar+or+marinho+or+marinha+or+marítimo+or+oceano+or+oceânico+or+costeiro+or+offshore+or+sea+or+marine+or+maritime+or+ocean+or+oceanic+or+coastal+or+offshore+)+and+(+%22meio+ambiente%22+or+ambiental+or+peixes+or+espécies+or+fauna+or+biodiversidade+or+recifes+or+corais+or+comunidades+or+pescadores+or+ribeirinhos+or+populações+or+preservação+or+conservação+or+poluição+or+aquecimento+or+%22mudanças+climáticas%22+or+%22desenvolvimento+sustentável%22+or+%22economia+azul%22+or+%22currículo+azul%22+or+%22carbono+azul%22+or+%22escolas+azuis%22+or+areia+or+environment+or+environmental+or+fish+or+species+or+fauna+or+biodiversity+or+reefs+or+corals+or+communities+or+fishers+or+riverside+or+populations+or+preservation+or+conservation+or+pollution+or+warming+or+%22climate+change%22+or+%22sustainable+development%22+or+%22blue+economy%22+or+%22blue+curriculum%22+or+%22blue+carbon%22+or+%22blue+schools%22+or+sand+)+)+or+subfield+is+(1910+or+2212)+)&amp;id=4H2xLsCDtpHG4AMg8Z4sbN" target="_blank" rel="noopener">abrir a consulta no OpenAlex ↗</a>.
+                    A consulta completa, em OQL (a linguagem de consulta do OpenAlex), é:
+                </p>
+                <div class="query-block">
+                    <button type="button" class="copy-btn" id="copy-query">Copiar</button>
+<pre id="query-text"><code>works where year >= (2018)
+  and country is (BR [Brazil])
+  and type is (article or review)
+  and (
+    title/abstract has (
+      (
+        mar or marinho or marinha or marítimo or oceano or oceânico or costeiro
+        or offshore or sea or marine or maritime or ocean or oceanic or coastal
+        or offshore
+      )
+      and (
+        "meio ambiente" or ambiental or peixes or espécies or fauna
+        or biodiversidade or recifes or corais or comunidades or pescadores
+        or ribeirinhos or populações or preservação or conservação or poluição
+        or aquecimento or "mudanças climáticas" or "desenvolvimento sustentável"
+        or "economia azul" or "currículo azul" or "carbono azul"
+        or "escolas azuis" or areia or environment or environmental or fish
+        or species or fauna or biodiversity or reefs or corals or communities
+        or fishers or riverside or populations or preservation or conservation
+        or pollution or warming or "climate change" or "sustainable development"
+        or "blue economy" or "blue curriculum" or "blue carbon"
+        or "blue schools" or sand
+      )
+    )
+    or subfield is (1910 [Oceanography] or 2212 [Ocean Engineering])
+  )</code></pre>
+                </div>
+            </section>
+
+            <section id="coleta" class="method-section">
+                <h2>Coleta</h2>
+                <p>
+                    Os dados foram extraídos pela <a href="https://docs.openalex.org" target="_blank" rel="noopener">API do OpenAlex</a>
+                    com o script <code>collect_openalex.py</code>. Como a API de filtros não permite combinar filtros
+                    diferentes com “ou”, a consulta foi executada em duas buscas — a textual
+                    (<code>title_and_abstract.search</code>) e a por subárea do tópico principal
+                    (<code>primary_topic.subfield.id</code>) —, ambas com os filtros de ano, país
+                    (<code>authorships.countries:BR</code>) e tipo. Os resultados foram unidos e deduplicados pelo
+                    identificador único de cada obra no OpenAlex.
+                </p>
+                <div class="method-stats" id="method-stats">
+                    <div><span class="stat-value" data-meta="unique_records">—</span><span class="stat-label">obras únicas</span></div>
+                    <div><span class="stat-value" data-meta="textual">—</span><span class="stat-label">na busca textual</span></div>
+                    <div><span class="stat-value" data-meta="subfields">—</span><span class="stat-label">na busca por subárea</span></div>
+                    <div><span class="stat-value" data-meta="collected_at">—</span><span class="stat-label">data da coleta</span></div>
+                </div>
+                <p class="method-note">
+                    O OpenAlex é atualizado continuamente; uma nova coleta pode trazer números um pouco diferentes.
+                    O ano corrente aparece com dados parciais.
+                </p>
+            </section>
+
+            <section id="tratamento" class="method-section">
+                <h2>Tratamento e indicadores</h2>
+                <p>Os indicadores do painel são calculados a partir dos metadados de cada obra no OpenAlex:</p>
+                <ul>
+                    <li><strong>Áreas, subáreas e tópicos</strong>: a área (<em>field</em>) e a subárea (<em>subfield</em>) vêm do tópico principal da obra; o gráfico de tópicos considera todos os tópicos atribuídos (até três por obra).</li>
+                    <li><strong>Autores, instituições e países</strong>: cada obra conta uma vez para cada autor, instituição ou país distinto (contagem integral), por isso as somas podem ultrapassar o total de obras. Autores são identificados pelo ID do OpenAlex, com ORCID quando disponível.</li>
+                    <li><strong>Colaboração científica</strong>: obras com autores de um único país (Brasil) são consideradas nacionais; com dois ou mais países, internacionais.</li>
+                    <li><strong>Acesso aberto</strong>: segue o <em>oa_status</em> do OpenAlex — diamante, dourado, verde, bronze, híbrido ou fechado; é aberta toda obra que não está como fechada.</li>
+                    <li><strong>Fontes</strong>: periódico ou repositório da localização principal da obra no OpenAlex.</li>
+                    <li><strong>ODS</strong>: associação automática feita pelo classificador do OpenAlex a partir do título e do resumo, com escore mínimo de 0,4; uma obra pode ter mais de um ODS.</li>
+                    <li><strong>Citações</strong>: usadas apenas para ordenar a listagem das publicações.</li>
+                </ul>
+            </section>
+
+            <section id="genero" class="method-section">
+                <h2>Gênero dos autores</h2>
+                <p>
+                    O gênero é uma <strong>previsão estatística a partir do primeiro nome</strong>, não uma
+                    autodeclaração. A classificação usa exclusivamente a base de nomes do Censo Demográfico 2010 do
+                    <strong>IBGE</strong>, na versão organizada pelo
+                    <a href="https://brasil.io/dataset/genero-nomes/nomes/" target="_blank" rel="noopener">Brasil.IO</a>
+                    (cerca de 100 mil nomes, com o número de pessoas de cada sexo). Um autor é classificado como
+                    <strong>Feminino</strong> ou <strong>Masculino</strong> quando ao menos <strong>90%</strong> das
+                    pessoas com aquele nome no Brasil são do mesmo sexo e o nome tem ao menos <strong>20</strong>
+                    registros. Ficam como <strong>Indefinido</strong> os nomes abreviados (iniciais), os nomes ambíguos
+                    e os ausentes da base. Não são usados fotos, textos, inteligência artificial generativa nem
+                    outras bases de nomes.
+                </p>
+                <p>
+                    O painel apresenta o gênero de todos os autores distintos e o do primeiro autor de cada obra, além
+                    de uma tabela com os primeiros nomes para conferência. Como a base reflete o uso dos nomes no
+                    Brasil, a classificação é menos confiável para autores estrangeiros: nomes como Andrea ou Simone
+                    são majoritariamente femininos no Brasil, mas masculinos na Itália.
+                </p>
+            </section>
+
+            <section id="limitacoes" class="method-section">
+                <h2>Limitações</h2>
+                <ul>
+                    <li>Os dados dependem exclusivamente do OpenAlex: diferenças de cobertura, atrasos de indexação e inconsistências de metadados (afiliações, acesso aberto, classificação temática) podem afetar os resultados.</li>
+                    <li>Não houve verificação humana da aderência temática das obras; o conjunto pode incluir trabalhos com relação parcial ou nenhuma relação com o oceano.</li>
+                    <li>A localização principal de algumas obras é um repositório (por exemplo, o Zenodo) e não o periódico em que foram publicadas.</li>
+                    <li>A classificação de gênero é aproximada e tem as limitações descritas na seção anterior.</li>
+                </ul>
+            </section>
+
+            <section id="reproducao" class="method-section">
+                <h2>Reprodutibilidade</h2>
+                <p>
+                    Todo o processo é aberto e reproduzível. Os scripts de coleta (<code>collect_openalex.py</code>),
+                    de classificação de gênero (<code>classify_gender_ibge.py</code>) e de geração dos dados do painel
+                    (<code>build_dashboard.py</code>), bem como os resultados da classificação, estão disponíveis no
+                    repositório <a href="https://github.com/fabiocantoadv/decada_oceano_br" target="_blank" rel="noopener">fabiocantoadv/decada_oceano_br</a>.
+                    O processamento foi feito em Python, e os gráficos usam a biblioteca Vega-Lite.
+                </p>
+            </section>
+
+            <section id="uso-ia" class="method-section">
+                <h2>Declaração de uso de IA</h2>
+                <p>
+                    Os procedimentos metodológicos — coleta dos dados na API do OpenAlex, tratamento e cálculo dos
+                    indicadores, implementação da classificação de gênero e desenvolvimento do painel — foram
+                    assistidos pelo modelo de inteligência artificial <strong>Claude Opus 5.5</strong>, da
+                    <strong>Anthropic</strong>, utilizado como agente de programação. As decisões metodológicas, a
+                    revisão dos resultados e a interpretação das análises são de responsabilidade da equipe de
+                    autoria. A classificação de gênero em si não utiliza inteligência artificial: é uma regra
+                    determinística aplicada à base de nomes do IBGE, descrita na seção
+                    <a href="#genero">Gênero dos autores</a>.
+                </p>
+            </section>
+
+            <section id="referencias" class="method-section method-refs">
+                <h2>Referências</h2>
+                <p>
+                    BORI-ELSEVIER. <strong>2024</strong>: retomada no crescimento da produção científica no Brasil e em
+                    outros 51 países. São Paulo: Agência BORI; Elsevier, 2025. Disponível em:
+                    <a href="https://abori.com.br/relatorios/bori-elsevier-2024-retomada-producao-cientifica/" target="_blank" rel="noopener">https://abori.com.br/relatorios/bori-elsevier-2024-retomada-producao-cientifica/</a>.
+                    Acesso em: 11 mar. 2026.
+                </p>
+                <p>
+                    BRASIL.IO. <strong>Gênero dos nomes</strong>: classificação de nomes brasileiros por gênero a partir
+                    de dados do Censo 2010 do IBGE. Disponível em:
+                    <a href="https://brasil.io/dataset/genero-nomes/nomes/" target="_blank" rel="noopener">https://brasil.io/dataset/genero-nomes/nomes/</a>.
+                </p>
+                <p>
+                    FICK, N. S.; CARNEIRO, F. F. B. Ciência e sustentabilidade: análise da contribuição das instituições
+                    da Rede Federal de Educação Profissional, Científica e Tecnológica da Região Sudeste para os
+                    Objetivos do Desenvolvimento Sustentável. <strong>Encontro Brasileiro de Bibliometria e
+                    Cientometria</strong>, [S. l.], v. 9, p. 1-7, 2024. DOI:
+                    <a href="https://doi.org/10.22477/ix.ebbc.272" target="_blank" rel="noopener">https://doi.org/10.22477/ix.ebbc.272</a>.
+                </p>
+                <p>
+                    IOC; UNESCO. <strong>Global Ocean Science Report 2020</strong>: charting capacity for ocean
+                    sustainability: executive summary. Paris: Unesco Publishing, 2020. (IOC Policy Series, 2020-1).
+                </p>
+                <p>
+                    PRIEM, J.; PIWOWAR, H.; ORR, R. <strong>OpenAlex</strong>: a fully-open index of scholarly works,
+                    authors, venues, institutions, and concepts. arXiv, 2022. DOI:
+                    <a href="https://doi.org/10.48550/arXiv.2205.01833" target="_blank" rel="noopener">https://doi.org/10.48550/arXiv.2205.01833</a>.
+                </p>
+                <p>
+                    UNITED NATIONS. <strong>The first global integrated marine assessment</strong>: World Ocean
+                    Assessment I. New York: United Nations, 2017.
+                </p>
+            </section>
+        </article>
+
+        <footer class="dashboard-footer">
+            <p>Projeto Oceano &bull; Análise de publicações brasileiras sobre o oceano &bull; Fonte: OpenAlex &copy; 2026</p>
+        </footer>
+    </div>
+
+    <script>
+        // Números da coleta (collection_meta.js, gerado por build_dashboard.py)
+        (function () {
+            if (typeof collectionMeta === 'undefined') return;
+            const m = collectionMeta;
+            const fmt = n => (typeof n === 'number' ? n.toLocaleString('pt-BR') : '—');
+            const values = {
+                unique_records: fmt(m.unique_records),
+                textual: fmt(m.records_per_query && m.records_per_query.textual),
+                subfields: fmt(m.records_per_query && m.records_per_query.subfields),
+                collected_at: m.collected_at ? new Date(m.collected_at).toLocaleDateString('pt-BR') : '—'
+            };
+            document.querySelectorAll('[data-meta]').forEach(el => { el.textContent = values[el.dataset.meta]; });
+        })();
+
+        // Copiar a consulta
+        document.getElementById('copy-query').addEventListener('click', function () {
+            const text = document.getElementById('query-text').innerText;
+            const btn = this;
+            const done = () => { btn.textContent = 'Copiado!'; setTimeout(() => { btn.textContent = 'Copiar'; }, 1600); };
+            if (navigator.clipboard) navigator.clipboard.writeText(text).then(done, () => {});
+        });
+    </script>
+</body>
+</html>

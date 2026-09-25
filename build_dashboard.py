@@ -222,17 +222,34 @@ print(f"dashboard_data.js: {os.path.getsize(OUT_JS)/1e6:.1f} MB")
 
 # Cache: o index.html referencia os arquivos com ?v=<hash do conteúdo>, para o
 # navegador (e o GitHub Pages) baixarem a versão nova sempre que algo mudar.
+def write_collection_meta():
+    """collection_meta.js: data e contagens da coleta, lidos pela página de metodologia."""
+    meta_path = os.path.join(HERE, "openalex_collection_meta.json")
+    meta = {}
+    if os.path.exists(meta_path):
+        with open(meta_path, encoding="utf-8") as f:
+            meta = json.load(f)
+    with open(os.path.join(HERE, "collection_meta.js"), "w", encoding="utf-8") as f:
+        f.write("const collectionMeta = ")
+        json.dump(meta, f, ensure_ascii=False)
+        f.write(";\n")
+
+
 def stamp_asset_versions():
-    index_path = os.path.join(HERE, "index.html")
-    with open(index_path, encoding="utf-8") as f:
-        html = f.read()
-    for asset in ("styles.css", "dashboard_data.js", "app.js"):
-        with open(os.path.join(HERE, asset), "rb") as f:
-            digest = hashlib.sha1(f.read()).hexdigest()[:10]
-        html = re.sub(re.escape(asset) + r"\?v=[^\"']*", f"{asset}?v={digest}", html)
-    with open(index_path, "w", encoding="utf-8") as f:
-        f.write(html)
-    print("Versões no index.html atualizadas (cache).")
+    for page in ("index.html", "metodologia.html"):
+        page_path = os.path.join(HERE, page)
+        if not os.path.exists(page_path):
+            continue
+        with open(page_path, encoding="utf-8") as f:
+            html = f.read()
+        for asset in ("styles.css", "dashboard_data.js", "app.js", "collection_meta.js"):
+            with open(os.path.join(HERE, asset), "rb") as f:
+                digest = hashlib.sha1(f.read()).hexdigest()[:10]
+            html = re.sub(re.escape(asset) + r"\?v=[^\"']*", f"{asset}?v={digest}", html)
+        with open(page_path, "w", encoding="utf-8") as f:
+            f.write(html)
+    print("Versões em index.html e metodologia.html atualizadas (cache).")
 
 
+write_collection_meta()
 stamp_asset_versions()
