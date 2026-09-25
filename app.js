@@ -224,6 +224,7 @@ function init() {
 
     populateFilterOptions();
     setupEventListeners();
+    setupExpandButtons();
     updateTableInstSortIndicators();
     updateTableCountrySortIndicators();
     updateTableSourceSortIndicators();
@@ -631,11 +632,13 @@ function renderHTMLDonut(containerId, data, chartType) {
     wrap.style.cssText = 'display:flex;align-items:center;gap:28px;width:100%;padding:8px 4px;box-sizing:border-box;font-family:Inter,sans-serif;';
 
     // ── SVG Donut ────────────────────────────────────────────────────────────
-    const size  = 220;
+    const big   = isExpanded(container);
+    const k     = big ? 1.7 : 1;       // escala quando o card está ampliado
+    const size  = 220 * k;
     const cx    = size / 2;
     const cy    = size / 2;
-    const R     = 88;   // outer radius
-    const r     = 54;   // inner radius (hole)
+    const R     = 88 * k;   // outer radius
+    const r     = 54 * k;   // inner radius (hole)
 
     const svgNS = 'http://www.w3.org/2000/svg';
     const svg   = document.createElementNS(svgNS, 'svg');
@@ -714,23 +717,23 @@ function renderHTMLDonut(containerId, data, chartType) {
 
     const labelTotal = document.createElementNS(svgNS, 'text');
     labelTotal.setAttribute('x', cx);
-    labelTotal.setAttribute('y', cy - 6);
+    labelTotal.setAttribute('y', cy - 6 * k);
     labelTotal.setAttribute('text-anchor', 'middle');
     labelTotal.setAttribute('dominant-baseline', 'middle');
     labelTotal.setAttribute('fill', '#2d3748');
     labelTotal.setAttribute('font-family', 'Inter, sans-serif');
-    labelTotal.setAttribute('font-size', '15');
+    labelTotal.setAttribute('font-size', String(15 * k));
     labelTotal.setAttribute('font-weight', '700');
     labelTotal.textContent = totalFmt;
     centerG.appendChild(labelTotal);
 
     const labelSub = document.createElementNS(svgNS, 'text');
     labelSub.setAttribute('x', cx);
-    labelSub.setAttribute('y', cy + 14);
+    labelSub.setAttribute('y', cy + 14 * k);
     labelSub.setAttribute('text-anchor', 'middle');
     labelSub.setAttribute('fill', '#a0aec0');
     labelSub.setAttribute('font-family', 'Inter, sans-serif');
-    labelSub.setAttribute('font-size', '10');
+    labelSub.setAttribute('font-size', String(10 * k));
     labelSub.textContent = 'registros';
     centerG.appendChild(labelSub);
 
@@ -739,7 +742,7 @@ function renderHTMLDonut(containerId, data, chartType) {
 
     // ── Legend Panel ─────────────────────────────────────────────────────────
     const legend = document.createElement('div');
-    legend.style.cssText = 'flex:1;min-width:0;display:flex;flex-direction:column;gap:7px;max-height:260px;overflow-y:auto;padding-right:4px;';
+    legend.style.cssText = 'flex:1;min-width:0;display:flex;flex-direction:column;gap:7px;' + (big ? 'max-height:none;overflow-y:visible;' : 'max-height:260px;overflow-y:auto;') + 'padding-right:4px;';
     // Scrollbar styling via CSS class
     legend.className = 'donut-legend';
 
@@ -771,12 +774,12 @@ function renderHTMLDonut(containerId, data, chartType) {
         topLine.style.cssText = 'display:flex;justify-content:space-between;align-items:baseline;gap:6px;';
 
         const nameEl = document.createElement('span');
-        nameEl.style.cssText = 'font-size:11px;font-weight:500;color:#2d3748;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:160px;display:block;';
+        nameEl.style.cssText = `font-size:${big ? 14 : 11}px;font-weight:500;color:#2d3748;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:${big ? 'none' : '160px'};display:block;`;
         nameEl.textContent = d.key;
         topLine.appendChild(nameEl);
 
         const pctEl = document.createElement('span');
-        pctEl.style.cssText = 'font-size:11px;font-weight:700;color:#4a5568;white-space:nowrap;flex-shrink:0;';
+        pctEl.style.cssText = `font-size:${big ? 14 : 11}px;font-weight:700;color:#4a5568;white-space:nowrap;flex-shrink:0;`;
         pctEl.textContent = `${pctFmt}%`;
         topLine.appendChild(pctEl);
 
@@ -1043,7 +1046,7 @@ function renderTemporalChart() {
     const spec = {
         "$schema": "https://vega.github.io/schema/vega-lite/v5.json",
         "width": "container",
-        "height": 260,
+        "height": chartHeight('chart-temporal', 260),
         "data": { "values": chartData },
         "mark": {
             "type": "bar",
@@ -1226,7 +1229,7 @@ function renderOAStatusBarChart() {
     const spec = {
         "$schema": "https://vega.github.io/schema/vega-lite/v5.json",
         "width": "container",
-        "height": 260,
+        "height": chartHeight('chart-oa-status', 260),
         "data": { "values": chartData },
         "layer": [
             {
@@ -1309,11 +1312,16 @@ function renderSDGChart() {
         .filter(d => d.pct > 0.01 || d.sdg === activeFilters.sdg)
         .sort((a, b) => b.value - a.value || a.sdg - b.sdg);
     const maxValue = Math.max(1, ...chartData.map(d => d.value));
+    // Altura de cada barra: 24px normal; ampliado, as barras ocupam a janela (até 70px)
+    const sdgEl = document.getElementById('chart-sdg');
+    const sdgStep = isExpanded(sdgEl)
+        ? Math.max(24, Math.min(70, Math.floor((sdgEl.clientHeight - 70) / Math.max(1, chartData.length))))
+        : 24;
 
     const spec = {
         "$schema": "https://vega.github.io/schema/vega-lite/v5.json",
         "width": "container",
-        "height": { "step": 24 },
+        "height": { "step": sdgStep },
         "data": { "values": chartData },
         "encoding": {
             "y": {
@@ -1890,6 +1898,138 @@ function renderCountriesTable() {
         row.append(tdRank, tdName, tdCount, tdPct);
         tableBodyCountries.appendChild(row);
     });
+}
+
+// ─── AMPLIAR GRÁFICOS E TABELAS ──────────────────────────────────────────────
+// Cada card ganha um botão que o abre numa janela sobreposta maior. O próprio
+// card é movido para a janela (filtros, ordenação e buscas continuam valendo) e
+// volta ao lugar ao fechar. Os gráficos são redesenhados no novo tamanho.
+
+const EXPAND_ICON = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 3 21 3 21 9"/><polyline points="9 21 3 21 3 15"/><line x1="21" y1="3" x2="14" y2="10"/><line x1="3" y1="21" x2="10" y2="14"/></svg>';
+const COLLAPSE_ICON = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>';
+
+// Redesenho de cada gráfico pelo id do seu container (tabelas só mudam de tamanho)
+const CARD_RENDERERS = {
+    'chart-temporal': () => renderTemporalChart(),
+    'chart-language': () => renderLanguageChart(),
+    'chart-type': () => renderTypeChart(),
+    'chart-collab': () => renderCollabChart(),
+    'chart-oa-pie': () => renderOAPieChart(),
+    'chart-oa-status': () => renderOAStatusBarChart(),
+    'chart-sdg': () => renderSDGChart(),
+    'chart-areas': () => renderAreasChart(),
+    'chart-subareas': () => renderSubareasChart(),
+    'chart-topics': () => renderTopicsChart()
+};
+
+let expandedCard = null;
+let expandPlaceholder = null;
+
+function isExpanded(el) {
+    const node = typeof el === 'string' ? document.querySelector(el) : el;
+    return !!(node && node.closest('.chart-modal'));
+}
+
+// Altura útil de um gráfico Vega: maior quando o card está ampliado
+function chartHeight(containerId, normalHeight) {
+    const el = document.getElementById(containerId);
+    if (!el || !isExpanded(el)) return normalHeight;
+    return Math.max(normalHeight, el.clientHeight - 90);
+}
+
+function rerenderCard(card) {
+    Object.keys(CARD_RENDERERS).forEach(id => {
+        if (card.querySelector('#' + id)) CARD_RENDERERS[id]();
+    });
+}
+
+function setupExpandButtons() {
+    const overlay = document.createElement('div');
+    overlay.className = 'chart-modal-overlay';
+    overlay.innerHTML = '<div class="chart-modal" role="dialog" aria-modal="true"></div>';
+    overlay.addEventListener('click', e => { if (e.target === overlay) closeExpandedCard(); });
+    document.body.appendChild(overlay);
+
+    document.addEventListener('keydown', e => {
+        if (e.key === 'Escape' && expandedCard) closeExpandedCard();
+    });
+
+    let resizeTimer = null;
+    window.addEventListener('resize', () => {
+        if (!expandedCard) return;
+        clearTimeout(resizeTimer);
+        resizeTimer = setTimeout(() => rerenderCard(expandedCard), 150);
+    });
+
+    document.querySelectorAll('.dashboard-grid > .chart-card').forEach(card => {
+        const header = card.querySelector('.chart-header');
+        if (!header) return;
+        let actions = header.querySelector('.chart-actions');
+        if (!actions) {
+            actions = document.createElement('div');
+            actions.className = 'chart-actions';
+            header.appendChild(actions);
+        }
+        const title = (header.querySelector('h2') || {}).textContent || 'gráfico';
+        const btn = document.createElement('button');
+        btn.type = 'button';
+        btn.className = 'chart-expand-btn';
+        btn.innerHTML = EXPAND_ICON;
+        btn.title = 'Ampliar';
+        btn.setAttribute('aria-label', `Ampliar: ${title}`);
+        btn.addEventListener('click', () => {
+            if (expandedCard === card) closeExpandedCard();
+            else openExpandedCard(card);
+        });
+        actions.appendChild(btn);
+    });
+}
+
+function openExpandedCard(card) {
+    if (expandedCard) closeExpandedCard();
+    const overlay = document.querySelector('.chart-modal-overlay');
+    const modal = overlay.querySelector('.chart-modal');
+
+    // Reserva o espaço do card na grade para o painel não "pular"
+    expandPlaceholder = document.createElement('div');
+    expandPlaceholder.className = card.className + ' chart-card-placeholder';
+    expandPlaceholder.style.height = card.offsetHeight + 'px';
+    card.parentNode.insertBefore(expandPlaceholder, card);
+
+    modal.setAttribute('aria-label', (card.querySelector('h2') || {}).textContent || '');
+    modal.appendChild(card);
+    card.classList.add('is-expanded');
+    overlay.classList.add('open');
+    document.body.classList.add('modal-open');
+    expandedCard = card;
+
+    const btn = card.querySelector('.chart-expand-btn');
+    btn.innerHTML = COLLAPSE_ICON;
+    btn.title = 'Fechar (Esc)';
+    btn.focus();
+
+    requestAnimationFrame(() => rerenderCard(card));
+}
+
+function closeExpandedCard() {
+    if (!expandedCard) return;
+    const card = expandedCard;
+    const overlay = document.querySelector('.chart-modal-overlay');
+
+    card.classList.remove('is-expanded');
+    expandPlaceholder.parentNode.insertBefore(card, expandPlaceholder);
+    expandPlaceholder.remove();
+    expandPlaceholder = null;
+    overlay.classList.remove('open');
+    document.body.classList.remove('modal-open');
+    expandedCard = null;
+
+    const btn = card.querySelector('.chart-expand-btn');
+    btn.innerHTML = EXPAND_ICON;
+    btn.title = 'Ampliar';
+    btn.focus();
+
+    requestAnimationFrame(() => rerenderCard(card));
 }
 
 window.addEventListener('DOMContentLoaded', init);
