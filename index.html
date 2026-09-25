@@ -16,7 +16,7 @@
     <script src="lib/vega-embed.min.js"></script>
     
     <!-- Stylesheet -->
-    <link rel="stylesheet" href="styles.css?v=535d616f34">
+    <link rel="stylesheet" href="styles.css?v=047a200540">
     
     <!-- Pre-aggregated data loaded from local JS to bypass CORS -->
     <script src="dashboard_data.js?v=4d7b817cf4"></script>
@@ -104,6 +104,18 @@
             </div>
             
             <div class="filters-grid">
+                <!-- Analysis selector -->
+                <div class="filter-group">
+                    <label for="filter-analysis">Análise</label>
+                    <select id="filter-analysis">
+                        <option value="todas">Todas</option>
+                        <option value="bibliometrica">Bibliométrica</option>
+                        <option value="acesso">Acesso</option>
+                        <option value="tematica">Temática</option>
+                        <option value="genero">Gênero</option>
+                    </select>
+                </div>
+
                 <!-- Year range filter -->
                 <div class="filter-group">
                     <label>Ano de Publicação (<span id="year-range-display">-</span>)</label>
@@ -144,7 +156,7 @@
         <!-- Main Dashboard Visualization Grid -->
         <main class="dashboard-grid">
             <!-- Linha 1: Evolução temporal e Idioma -->
-            <div class="chart-card">
+            <div data-analysis="bibliometrica" class="chart-card">
                 <div class="chart-header">
                     <div class="chart-title-area">
                         <h2>Evolução temporal</h2>
@@ -165,7 +177,7 @@
                 <div id="chart-temporal" class="chart-container"></div>
             </div>
 
-            <div class="chart-card">
+            <div data-analysis="bibliometrica" class="chart-card">
                 <div class="chart-header">
                     <div class="chart-title-area">
                         <h2>Idioma das Publicações</h2>
@@ -179,7 +191,7 @@
             </div>
 
             <!-- Linha 2: Tipo de Documento e Colaboração científica -->
-            <div class="chart-card">
+            <div data-analysis="bibliometrica" class="chart-card">
                 <div class="chart-header">
                     <div class="chart-title-area">
                         <h2>Tipo de Documento</h2>
@@ -192,7 +204,7 @@
                 <div id="chart-type" class="chart-container donut-container"></div>
             </div>
 
-            <div class="chart-card">
+            <div data-analysis="bibliometrica" class="chart-card">
                 <div class="chart-header">
                     <div class="chart-title-area">
                         <h2>Colaboração Científica</h2>
@@ -206,7 +218,7 @@
             </div>
 
             <!-- Linha 3: Autores e Instituições -->
-            <div class="chart-card">
+            <div data-analysis="bibliometrica" class="chart-card">
                 <div class="chart-header">
                     <div class="chart-title-area">
                         <h2>Autores</h2>
@@ -243,7 +255,7 @@
                 </div>
             </div>
 
-            <div class="chart-card">
+            <div data-analysis="bibliometrica" class="chart-card">
                 <div class="chart-header">
                     <div class="chart-title-area">
                         <h2>Instituições</h2>
@@ -281,7 +293,7 @@
             </div>
 
             <!-- Linha 4: Fontes e Países -->
-            <div class="chart-card">
+            <div data-analysis="bibliometrica" class="chart-card">
                 <div class="chart-header">
                     <div class="chart-title-area">
                         <h2>Fontes</h2>
@@ -319,7 +331,7 @@
                 </div>
             </div>
 
-            <div class="chart-card">
+            <div data-analysis="bibliometrica" class="chart-card">
                 <div class="chart-header">
                     <div class="chart-title-area">
                         <h2>Países</h2>
@@ -358,7 +370,7 @@
             </div>
 
             <!-- Linha 5: Acesso Aberto e Modelo de Acesso -->
-            <div class="chart-card">
+            <div data-analysis="acesso" class="chart-card">
                 <div class="chart-header">
                     <div class="chart-title-area">
                         <h2>Acesso Aberto</h2>
@@ -371,7 +383,7 @@
                 <div id="chart-oa-pie" class="chart-container donut-container"></div>
             </div>
 
-            <div class="chart-card">
+            <div data-analysis="acesso" class="chart-card">
                 <div class="chart-header">
                     <div class="chart-title-area">
                         <h2>Modelo de Acesso</h2>
@@ -385,7 +397,7 @@
             </div>
 
             <!-- Linha 6: Objetivos de Desenvolvimento Sustentável -->
-            <div class="chart-card span-all">
+            <div data-analysis="tematica" class="chart-card span-all">
                 <div class="chart-header">
                     <div class="chart-title-area">
                         <h2>Objetivos de Desenvolvimento Sustentável (ODS)</h2>
@@ -399,7 +411,7 @@
             </div>
 
             <!-- Linha 7: Áreas -->
-            <div class="chart-card span-all">
+            <div data-analysis="tematica" class="chart-card span-all">
                 <div class="chart-header">
                     <div class="chart-title-area">
                         <h2>Áreas</h2>
@@ -413,7 +425,7 @@
             </div>
 
             <!-- Linha 8: Subáreas -->
-            <div class="chart-card span-all">
+            <div data-analysis="tematica" class="chart-card span-all">
                 <div class="chart-header">
                     <div class="chart-title-area">
                         <h2>Subáreas</h2>
@@ -427,7 +439,7 @@
             </div>
 
             <!-- Linha 9: Tópicos de Pesquisa -->
-            <div class="chart-card span-all">
+            <div data-analysis="tematica" class="chart-card span-all">
                 <div class="chart-header">
                     <div class="chart-title-area">
                         <h2>Tópicos de Pesquisa</h2>
@@ -440,7 +452,7 @@
                 <div id="chart-topics" class="chart-container treemap-container"></div>
             </div>
             <!-- Linha 10: Gênero dos autores e do primeiro autor -->
-            <div class="chart-card">
+            <div data-analysis="genero" class="chart-card">
                 <div class="chart-header">
                     <div class="chart-title-area">
                         <h2>Gênero dos Autores</h2>
@@ -451,7 +463,7 @@
                 <div id="chart-author-gender" class="chart-container donut-container"></div>
             </div>
 
-            <div class="chart-card">
+            <div data-analysis="genero" class="chart-card">
                 <div class="chart-header">
                     <div class="chart-title-area">
                         <h2>Gênero do Primeiro Autor</h2>
@@ -465,7 +477,7 @@
             </div>
 
             <!-- Linha 11: Conferência — primeiros nomes por gênero -->
-            <div class="chart-card span-all">
+            <div data-analysis="genero" class="chart-card span-all">
                 <div class="chart-header">
                     <div class="chart-title-area">
                         <h2>Primeiros Nomes por Gênero</h2>
@@ -506,7 +518,7 @@
             </div>
 
             <!-- Linha 12: Listagem das Publicações -->
-            <div class="chart-card span-all">
+            <div data-analysis="todas" class="chart-card span-all">
                 <div class="chart-header">
                     <div class="chart-title-area">
                         <h2>Listagem das Publicações</h2>
@@ -545,6 +557,6 @@
     </div>
 
     <!-- Main Logic Script -->
-    <script src="app.js?v=7a86ad378b"></script>
+    <script src="app.js?v=20a93f0b86"></script>
 </body>
 </html>

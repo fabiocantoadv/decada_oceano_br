@@ -1681,7 +1681,7 @@ body {
     padding-bottom: 10px;
 }
 .top-row .filters-grid {
-    grid-template-columns: repeat(3, minmax(0, 1fr));
+    grid-template-columns: repeat(4, minmax(0, 1fr));
 }
 @media (max-width: 992px) {
     .top-row {
@@ -2055,4 +2055,15 @@ body.modal-open {
     .author-grid {
         grid-template-columns: 1fr;
     }
+}
+
+/* Seletor de análise: cards de outras análises ficam ocultos */
+.chart-card.analysis-hidden {
+    display: none;
+}
+#filter-analysis {
+    font-weight: 600;
+    color: var(--primary-hover);
+    border-color: rgba(85, 179, 153, 0.5);
+    background-color: var(--primary-light);
 }

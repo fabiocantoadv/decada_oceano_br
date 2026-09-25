@@ -230,6 +230,7 @@ function init() {
     setupEventListeners();
     setupFirstNamesTable();
     setupExpandButtons();
+    setupAnalysisSelector();
     updateTableInstSortIndicators();
     updateTableCountrySortIndicators();
     updateTableSourceSortIndicators();
@@ -450,24 +451,76 @@ function updateDashboard() {
     updateChartClearButtonsVisibility();
     updateKPIs();
 
-    renderTemporalChart();
-    renderLanguageChart();
-    renderAreasChart();
-    renderSourcesTable();
-    renderAuthorsTable();
-    renderInstitutionsTable();
-    renderCountriesTable();
-    renderSubareasChart();
-    renderTopicsChart();
-    renderTypeChart();
-    renderOAPieChart();
-    renderOAStatusBarChart();
-    renderCollabChart();
-    renderSDGChart();
-    renderAuthorGenderChart();
-    renderFirstAuthorGenderChart();
-    renderFirstNamesTable();
-    renderPublicationsTable();
+    // Só os cards da análise selecionada são desenhados; os demais são
+    // desenhados quando a análise deles for aberta.
+    renderVisibleCards();
+}
+
+// ─── SELETOR DE ANÁLISE ──────────────────────────────────────────────────────
+// Cada card tem data-analysis="bibliometrica|acesso|tematica|genero|todas".
+// A listagem de publicações ("todas") aparece em todas as análises; a opção
+// "Todas" mostra o painel completo.
+const ANALYSES = ['todas', 'bibliometrica', 'acesso', 'tematica', 'genero'];
+let currentAnalysis = 'todas';
+
+// Função de desenho de cada gráfico/tabela, pelo id do elemento que ele preenche
+const ALL_RENDERERS = {
+    'chart-temporal': () => renderTemporalChart(),
+    'chart-language': () => renderLanguageChart(),
+    'chart-type': () => renderTypeChart(),
+    'chart-collab': () => renderCollabChart(),
+    'table-body-authors': () => renderAuthorsTable(),
+    'table-body-institutions': () => renderInstitutionsTable(),
+    'table-body-sources': () => renderSourcesTable(),
+    'table-body-countries': () => renderCountriesTable(),
+    'chart-oa-pie': () => renderOAPieChart(),
+    'chart-oa-status': () => renderOAStatusBarChart(),
+    'chart-sdg': () => renderSDGChart(),
+    'chart-areas': () => renderAreasChart(),
+    'chart-subareas': () => renderSubareasChart(),
+    'chart-topics': () => renderTopicsChart(),
+    'chart-author-gender': () => renderAuthorGenderChart(),
+    'chart-first-gender': () => renderFirstAuthorGenderChart(),
+    'table-body-first-names': () => renderFirstNamesTable(),
+    'table-body-publications': () => renderPublicationsTable()
+};
+
+function cardIsShown(card) {
+    return !card.classList.contains('analysis-hidden');
+}
+
+// resetPublications = false mantém a página atual da listagem (troca de análise)
+function renderVisibleCards(resetPublications = true) {
+    document.querySelectorAll('.dashboard-grid > .chart-card, .chart-modal .chart-card').forEach(card => {
+        if (!cardIsShown(card)) return;
+        Object.keys(ALL_RENDERERS).forEach(id => {
+            if (!card.querySelector('#' + id)) return;
+            if (id === 'table-body-publications' && !resetPublications) return;
+            ALL_RENDERERS[id]();
+        });
+    });
+}
+
+function setAnalysis(name, { updateHash = true, render = true } = {}) {
+    if (!ANALYSES.includes(name)) name = 'todas';
+    currentAnalysis = name;
+    const select = document.getElementById('filter-analysis');
+    if (select && select.value !== name) select.value = name;
+    document.querySelectorAll('.dashboard-grid > .chart-card').forEach(card => {
+        const group = card.dataset.analysis || 'todas';
+        card.classList.toggle('analysis-hidden', name !== 'todas' && group !== 'todas' && group !== name);
+    });
+    if (updateHash) {
+        try { history.replaceState(null, '', '#analise=' + name); } catch (e) { /* file:// */ }
+    }
+    if (render) renderVisibleCards(false);
+}
+
+function setupAnalysisSelector() {
+    const select = document.getElementById('filter-analysis');
+    select.addEventListener('change', () => setAnalysis(select.value));
+    const m = /analise=([a-z]+)/.exec(location.hash || '');
+    setAnalysis(m ? m[1] : 'todas', { updateHash: !!m, render: false });
 }
 
 function updateKPIs() {
